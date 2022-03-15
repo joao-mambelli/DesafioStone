@@ -19,10 +19,11 @@ namespace DesafioStone.Controllers
         [Authorize]
         public ActionResult<IEnumerable<string>> GetAll()
         {
-            var list = new List<string>();
-
-            list.Add("test1");
-            list.Add("test2");
+            var list = new List<string>
+            {
+                "test1",
+                "test2"
+            };
 
             return list;
         }
@@ -43,6 +44,7 @@ namespace DesafioStone.Controllers
         }
 
         [HttpPut]
+        [Route("{invoiceId}")]
         [Authorize]
         public ActionResult<string> Put([FromBody] Invoice model)
         {
@@ -50,8 +52,17 @@ namespace DesafioStone.Controllers
         }
 
         [HttpPatch]
+        [Route("{invoiceId}")]
         [Authorize]
         public ActionResult<string> Patch([FromBody] Invoice model)
+        {
+            return "test";
+        }
+
+        [HttpDelete]
+        [Route("{invoiceId}")]
+        [Authorize]
+        public ActionResult<string> Delete()
         {
             return "test";
         }

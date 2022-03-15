@@ -2,15 +2,17 @@
 using DesafioStone.Models;
 using DesafioStone.Repositories;
 using DesafioStone.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DesafioStone.Controllers
 {
     [ApiController]
-    [Route("v1/login")]
-    public class LoginController : ControllerBase
+    [Route("v1/user")]
+    public class UserController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<dynamic> Login([FromBody] User model)
+        [Route("authorize")]
+        public ActionResult<dynamic> Authorize([FromBody] User model)
         {
             var user = UserRepository.Get(model.Username, model.Password);
 
@@ -26,6 +28,21 @@ namespace DesafioStone.Controllers
                 user = user,
                 token = token,
             };
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Manager")]
+        public ActionResult<string> Post([FromBody] User model)
+        {
+            return "test";
+        }
+
+        [HttpGet]
+        [Route("{userId}")]
+        [Authorize(Roles = "Manager")]
+        public ActionResult<string> Get()
+        {
+            return "test";
         }
     }
 }
