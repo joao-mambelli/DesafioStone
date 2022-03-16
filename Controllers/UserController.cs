@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using DesafioStone.Models;
 using DesafioStone.Repositories;
 using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
