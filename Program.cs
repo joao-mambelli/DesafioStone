@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using DesafioStone.Utils.Common;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddControllers().AddNewtonsoftJson();
 
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Secret"]);
+var key = Encoding.ASCII.GetBytes(SecretAccess.Secret());
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

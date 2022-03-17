@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
+using DesafioStone.Utils.Common;
 
 namespace DesafioStone.Services
 {
@@ -15,7 +16,7 @@ namespace DesafioStone.Services
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
             var configuration = builder.Build();
 
-            var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("Secret"));
+            var key = Encoding.ASCII.GetBytes(SecretAccess.Secret());
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Expires = DateTime.UtcNow.AddHours(8),
