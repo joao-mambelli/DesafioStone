@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DesafioStone.Repositories;
 using DesafioStone.Services;
-using DesafioStone.Models;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 
@@ -13,7 +12,7 @@ namespace DesafioStone.Controllers
     {
         [HttpPost]
         [Route("authorize")]
-        public ActionResult<dynamic> AuthorizeUser([FromBody] UserAuthorizeRequest request)
+        public IActionResult AuthorizeUser([FromBody] UserAuthorizeRequest request)
         {
             var user = UserRepository.VerifyPassword(request.Username, request.Password);
 
@@ -31,7 +30,7 @@ namespace DesafioStone.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Manager")]
-        public ActionResult<User> CreateUser([FromBody] UserCreateRequest request)
+        public IActionResult CreateUser([FromBody] UserCreateRequest request)
         {
             if (request == null)
             {
@@ -51,7 +50,7 @@ namespace DesafioStone.Controllers
         [HttpGet]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
-        public ActionResult<User> GetUser(int userId)
+        public IActionResult GetUserById(long userId)
         {
             var user = UserRepository.GetUserById(userId);
 
@@ -64,7 +63,7 @@ namespace DesafioStone.Controllers
         [HttpDelete]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
-        public ActionResult<User> DeleteUser(int userId)
+        public IActionResult DeleteUser(long userId)
         {
             var user = UserRepository.GetUserById(userId);
 
@@ -73,7 +72,22 @@ namespace DesafioStone.Controllers
 
             UserRepository.DeleteUser(userId);
 
-            return Ok();
+            return Ok(new { message = "Usuário com o id '" + userId + "' foi excluído." });
+        }
+
+        [HttpPost]
+        [Route("{userId}/updatepassword")]
+        [Authorize]
+        public IActionResult UpdateUserPassword([FromBody] UserUpdatePasswordRequest request, long userId)
+        {
+            if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)
+            {
+                return Unauthorized(new { message = "Você não possui permissão para alterar a senha do usuário com o id '" + userId + "'." });
+            }
+
+            var user = UserRepository.UpdateUserPassword(request, userId);
+
+            return Ok(user);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace DesafioStone.DataContracts
         public string Username { get; set; }
 
         [Required]
+        [RegularExpression(@"^.{8,}$")]
         [StringLength(64)]
         public string Password { get; set; }
 

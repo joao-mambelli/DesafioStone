@@ -1,14 +1,28 @@
-﻿namespace DesafioStone.DataContracts
+﻿using DesafioStone.Enums;
+using System.ComponentModel.DataAnnotations;
+using DesafioStone.CustomAttributes;
+
+namespace DesafioStone.DataContracts
 {
     public class InvoiceUpdateRequest
     {
-        public int ReferenceMonth { get; set; }
-        public int ReferenceYear { get; set; }
+        [RequiredEnumField]
+        public Month? ReferenceMonth { get; set; }
+
+        [Required]
+        [Range(1900, int.MaxValue)]
+        public int? ReferenceYear { get; set; }
+
+        [Required]
+        [RegularExpression(@"^[0-9]{11}$|^[0-9]{14}$")]
         public string Document { get; set; }
+
+        [Required]
+        [StringLength(256)]
         public string Description { get; set; }
-        public int Amount { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime DeactivatedAt { get; set; }
+
+        [Required]
+        [Range(0, int.MaxValue)]
+        public int? Amount { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DesafioStone.Models;
+﻿using DesafioStone.Interfaces;
+using DesafioStone.Models;
 using DesafioStone.DataContracts;
 using DesafioStone.Enums;
 using DesafioStone.Utils.Providers.HashProvider;
@@ -9,7 +10,7 @@ namespace DesafioStone.Repositories
 {
     public static class UserRepository
     {
-        public static User VerifyPassword(string username, string password)
+        public static IUser VerifyPassword(string username, string password)
         {
             var conn = new MySqlConnection(DBAccess.ConnectionString());
 
@@ -24,16 +25,16 @@ namespace DesafioStone.Repositories
 
                 var rdr = cmd.ExecuteReader();
 
-                var users = new List<User>();
+                var users = new List<IUser>();
 
                 while (rdr.Read())
                 {
                     users.Add(new User
                     {
-                        Id = (int)rdr["id"],
-                        Username = (string)rdr["username"],
-                        Password = (string)rdr["password"],
-                        Role = (Role)rdr["role"]
+                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                        Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                        Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                        Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
                     });
                 }
 
@@ -58,7 +59,7 @@ namespace DesafioStone.Repositories
             }
         }
 
-        public static User CreateUser(UserCreateRequest request)
+        public static IUser CreateUser(UserCreateRequest request)
         {
             IHashProvider hashProvider = new HashProvider();
 
@@ -76,7 +77,7 @@ namespace DesafioStone.Repositories
 
                 cmd.ExecuteNonQuery();
 
-                return GetUserByUsername(request.Username);
+                return GetUserById(cmd.LastInsertedId);
             }
             catch (Exception)
             {
@@ -86,7 +87,7 @@ namespace DesafioStone.Repositories
             }
         }
 
-        public static User GetUserByUsername(string username)
+        public static IUser GetUserByUsername(string username)
         {
             var conn = new MySqlConnection(DBAccess.ConnectionString());
 
@@ -100,23 +101,19 @@ namespace DesafioStone.Repositories
                 cmd.Parameters.AddWithValue("username", username);
 
                 var rdr = cmd.ExecuteReader();
+                rdr.Read();
 
-                var users = new List<User>();
-
-                while (rdr.Read())
+                var user = new User
                 {
-                    users.Add(new User
-                    {
-                        Id = (int)rdr["id"],
-                        Username = (string)rdr["username"],
-                        Password = (string)rdr["password"],
-                        Role = (Role)rdr["role"]
-                    });
-                }
+                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                    Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                    Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                    Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
+                };
 
                 rdr.Close();
 
-                return users.Where(x => x.Username == username.ToLower()).FirstOrDefault();
+                return user;
             }
             catch (Exception)
             {
@@ -126,7 +123,7 @@ namespace DesafioStone.Repositories
             }
         }
 
-        public static User GetUserById(int userId)
+        public static IUser GetUserById(long userId)
         {
             var conn = new MySqlConnection(DBAccess.ConnectionString());
 
@@ -139,23 +136,19 @@ namespace DesafioStone.Repositories
                 cmd.Parameters.AddWithValue("userId", userId);
 
                 var rdr = cmd.ExecuteReader();
+                rdr.Read();
 
-                var users = new List<User>();
-
-                while (rdr.Read())
+                var user = new User
                 {
-                    users.Add(new User
-                    {
-                        Id = (int)rdr["id"],
-                        Username = (string)rdr["username"],
-                        Password = (string)rdr["password"],
-                        Role = (Role)rdr["role"]
-                    });
-                }
+                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                    Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                    Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                    Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
+                };
 
                 rdr.Close();
 
-                return users.Where(x => x.Id == userId).FirstOrDefault();
+                return user;
             }
             catch (Exception)
             {
@@ -165,7 +158,7 @@ namespace DesafioStone.Repositories
             }
         }
 
-        public static void DeleteUser(int userId)
+        public static void DeleteUser(long userId)
         {
             var conn = new MySqlConnection(DBAccess.ConnectionString());
 
@@ -183,6 +176,33 @@ namespace DesafioStone.Repositories
             catch (Exception)
             {
                 conn.Close();
+            }
+        }
+
+        public static IUser UpdateUserPassword(UserUpdatePasswordRequest request, long userId)
+        {
+            IHashProvider hashProvider = new HashProvider();
+
+            var conn = new MySqlConnection(DBAccess.ConnectionString());
+
+            try
+            {
+                conn.Open();
+
+                var cmd = new MySqlCommand("UPDATE user SET password = @password WHERE id = @userId", conn);
+
+                cmd.Parameters.AddWithValue("password", hashProvider.ComputeHash(request.Password));
+                cmd.Parameters.AddWithValue("userId", userId);
+
+                cmd.ExecuteNonQuery();
+
+                return GetUserById(userId);
+            }
+            catch (Exception)
+            {
+                conn.Close();
+
+                return null;
             }
         }
     }

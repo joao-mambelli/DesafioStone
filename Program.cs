@@ -8,6 +8,7 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Secret"]);
 builder.Services.AddAuthentication(x =>

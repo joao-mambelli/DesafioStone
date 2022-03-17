@@ -1,4 +1,4 @@
-﻿using DesafioStone.Models;
+﻿using DesafioStone.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -8,7 +8,7 @@ namespace DesafioStone.Services
 {
     public static class TokenService
     {
-        public static string GenerateToken(User user)
+        public static string GenerateToken(IUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -23,7 +23,8 @@ namespace DesafioStone.Services
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim("Id", user.Id.ToString())
                 })
             };
 

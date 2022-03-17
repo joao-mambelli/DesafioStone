@@ -1,10 +1,11 @@
 using DesafioStone.Enums;
+using DesafioStone.Interfaces;
 
 namespace DesafioStone.Models
 {
-    public class Invoice
+    public class Invoice : IInvoice
     {
-        internal int Id { get; set; }
+        public long Id { get; set; }
         public Month ReferenceMonth { get; set; }
         public int ReferenceYear { get; set; }
         public string Document { get; set; }
@@ -12,6 +13,6 @@ namespace DesafioStone.Models
         public int Amount { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime DeactivatedAt { get; set; }
+        public DateTime? DeactivatedAt { get; set; }
     }
 }

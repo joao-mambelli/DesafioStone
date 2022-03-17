@@ -1,10 +1,11 @@
 using DesafioStone.Enums;
+using DesafioStone.Interfaces;
 
 namespace DesafioStone.Models
 {
-    public class User
+    public class User : IUser
     {
-        internal int Id { get; set; }
+        public long Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
         public Role Role { get; set; }
