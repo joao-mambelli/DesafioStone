@@ -3,6 +3,7 @@ using DesafioStone.Repositories;
 using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace DesafioStone.Controllers
 {
@@ -12,6 +13,7 @@ namespace DesafioStone.Controllers
     {
         [HttpPost]
         [Route("authorize")]
+        [SwaggerOperation(Summary = "In case Username and Passwords are right, retrieves a new 8 hours token.")]
         public IActionResult AuthorizeUser([FromBody] UserAuthorizeRequest request)
         {
             var user = UserRepository.VerifyPassword(request.Username, request.Password);
@@ -30,6 +32,7 @@ namespace DesafioStone.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Manager")]
+        [SwaggerOperation(Summary = "In case no user with same Username exists, creates a new User.")]
         public IActionResult CreateUser([FromBody] UserCreateRequest request)
         {
             if (request == null)
@@ -50,6 +53,7 @@ namespace DesafioStone.Controllers
         [HttpGet]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
+        [SwaggerOperation(Summary = "In case an user with given Id exists, retrieves it.")]
         public IActionResult GetUserById(long userId)
         {
             var user = UserRepository.GetUserById(userId);
@@ -63,6 +67,7 @@ namespace DesafioStone.Controllers
         [HttpDelete]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
+        [SwaggerOperation(Summary = "In case an user with given Id exists, marks it as deleted.")]
         public IActionResult DeleteUser(long userId)
         {
             var user = UserRepository.GetUserById(userId);
@@ -78,6 +83,7 @@ namespace DesafioStone.Controllers
         [HttpPost]
         [Route("{userId}/updatepassword")]
         [Authorize]
+        [SwaggerOperation(Summary = "In case an user with given Id exists and it's the same Id as the one stored in the token, changes its password.")]
         public IActionResult UpdateUserPassword([FromBody] UserUpdatePasswordRequest request, long userId)
         {
             if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)

@@ -78,7 +78,7 @@ namespace DesafioStone.Repositories
             }
         }
 
-        public static IEnumerable<IInvoice> GetAllInvoices()
+        public static IEnumerable<IInvoice> GetAllActiveInvoices()
         {
             var conn = new MySqlConnection(DBAccess.ConnectionString());
 
@@ -86,7 +86,9 @@ namespace DesafioStone.Repositories
             {
                 conn.Open();
 
-                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice", conn);
+                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive", conn);
+
+                cmd.Parameters.AddWithValue("isActive", 1);
 
                 var rdr = cmd.ExecuteReader();
 
@@ -113,6 +115,84 @@ namespace DesafioStone.Repositories
                 rdr.Close();
 
                 return invoices;
+            }
+            catch (Exception)
+            {
+                conn.Close();
+
+                return null;
+            }
+        }
+
+        public static IEnumerable<IInvoice> GetActivePaginatedInvoices(InvoicePaginationQuery query)
+        {
+            var conn = new MySqlConnection(DBAccess.ConnectionString());
+
+            try
+            {
+                conn.Open();
+
+                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive LIMIT @offset, @rows", conn);
+
+                cmd.Parameters.AddWithValue("offset", (query.Page - 1) * query.RowsPerPage);
+                cmd.Parameters.AddWithValue("rows", query.RowsPerPage);
+                cmd.Parameters.AddWithValue("isactive", 1);
+
+                var rdr = cmd.ExecuteReader();
+
+                var invoices = new List<IInvoice>();
+
+                while (rdr.Read())
+                {
+                    var invoice = new Invoice
+                    {
+                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                        ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
+                        ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
+                        Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
+                        Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
+                        Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
+                        IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
+                        CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
+                        DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
+                    };
+
+                    invoices.Add(invoice);
+                }
+
+                rdr.Close();
+
+                return invoices;
+            }
+            catch (Exception)
+            {
+                conn.Close();
+
+                return null;
+            }
+        }
+
+        public static long? GetNumberOfActiveInvoices()
+        {
+            var conn = new MySqlConnection(DBAccess.ConnectionString());
+
+            try
+            {
+                conn.Open();
+
+                var cmd = new MySqlCommand("SELECT COUNT(*) FROM invoice WHERE isactive = @isactive", conn);
+
+                cmd.Parameters.AddWithValue("isactive", 1);
+
+                var rdr = cmd.ExecuteReader();
+
+                rdr.Read();
+
+                var count = Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]);
+
+                rdr.Close();
+
+                return count;
             }
             catch (Exception)
             {
