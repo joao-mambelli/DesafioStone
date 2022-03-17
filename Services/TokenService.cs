@@ -13,9 +13,6 @@ namespace DesafioStone.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
-            var configuration = builder.Build();
-
             var key = Encoding.ASCII.GetBytes(SecretAccess.Secret());
             var tokenDescriptor = new SecurityTokenDescriptor
             {
