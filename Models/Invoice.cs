@@ -1,9 +1,11 @@
+using DesafioStone.Enums;
+
 namespace DesafioStone.Models
 {
     public class Invoice
     {
         internal int Id { get; set; }
-        public int ReferenceMonth { get; set; }
+        public Month ReferenceMonth { get; set; }
         public int ReferenceYear { get; set; }
         public string Document { get; set; }
         public string Description { get; set; }

@@ -39,7 +39,7 @@ namespace DesafioStone.Controllers
 
         [HttpPost]
         [Authorize]
-        public ActionResult<string> Create([FromBody] InvoiceCreateRequest request, int invoiceId)
+        public ActionResult<string> Create([FromBody] InvoiceCreateRequest request)
         {
             return "test";
         }

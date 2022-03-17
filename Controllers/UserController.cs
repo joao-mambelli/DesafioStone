@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DesafioStone.Repositories;
 using DesafioStone.Services;
+using DesafioStone.Models;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 
@@ -12,7 +13,7 @@ namespace DesafioStone.Controllers
     {
         [HttpPost]
         [Route("authorize")]
-        public ActionResult<dynamic> Authorize([FromBody] UserAuthorizeRequest request)
+        public ActionResult<dynamic> AuthorizeUser([FromBody] UserAuthorizeRequest request)
         {
             var user = UserRepository.VerifyPassword(request.Username, request.Password);
 
@@ -21,40 +22,58 @@ namespace DesafioStone.Controllers
 
             var token = TokenService.GenerateToken(user);
 
-            user.Password = "";
-
-            return new
+            return Ok(new
             {
                 user,
                 token,
-            };
+            });
         }
 
         [HttpPost]
         [Authorize(Roles = "Manager")]
-        public ActionResult<dynamic> Create([FromBody] UserCreateRequest request)
+        public ActionResult<User> CreateUser([FromBody] UserCreateRequest request)
         {
-            var user = UserRepository.UsernameExists(request.Username);
+            if (request == null)
+            {
+                return BadRequest();
+            }
+
+            var user = UserRepository.GetUserByUsername(request.Username);
 
             if (user != null)
-                return Conflict(new { message = "Usuário \"" + request.Username +  "\" já existe." });
+                return Conflict(new { message = "Usuário '" + request.Username +  "' já existe." });
 
-            user = UserRepository.Create(request);
+            user = UserRepository.CreateUser(request);
 
-            return user;
+            return Created("v1/users/" + user.Id, user);
         }
 
         [HttpGet]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
-        public ActionResult<dynamic> Get(int userId)
+        public ActionResult<User> GetUser(int userId)
         {
-            var user = UserRepository.GetUser(userId);
+            var user = UserRepository.GetUserById(userId);
 
             if (user == null)
-                return NotFound(new { message = "Usuário com o id \"" + userId + "\" não existe." });
+                return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
 
-            return user;
+            return Ok(user);
+        }
+
+        [HttpDelete]
+        [Route("{userId}")]
+        [Authorize(Roles = "Manager")]
+        public ActionResult<User> DeleteUser(int userId)
+        {
+            var user = UserRepository.GetUserById(userId);
+
+            if (user == null)
+                return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
+
+            UserRepository.DeleteUser(userId);
+
+            return Ok();
         }
     }
 }
