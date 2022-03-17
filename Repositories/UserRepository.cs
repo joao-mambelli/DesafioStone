@@ -10,35 +10,32 @@ namespace DesafioStone.Repositories
 {
     public static class UserRepository
     {
-        public static IUser VerifyPassword(string username, string password)
+        public static async Task<IUser> VerifyPasswordAsync(string username, string password)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
-
-                var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE isactive = @isActive AND username = @username", conn);
-
-                cmd.Parameters.AddWithValue("isActive", 1);
-                cmd.Parameters.AddWithValue("username", username);
-
-                var rdr = cmd.ExecuteReader();
-
                 var users = new List<IUser>();
 
-                while (rdr.Read())
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    users.Add(new User
-                    {
-                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                        Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
-                        Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                        Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
-                    });
-                }
+                    conn.Open();
 
-                rdr.Close();
+                    using var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE isactive = @isActive AND username = @username", conn);
+                    cmd.Parameters.AddWithValue("isActive", 1);
+                    cmd.Parameters.AddWithValue("username", username);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    while (await rdr.ReadAsync())
+                    {
+                        users.Add(new User
+                        {
+                            Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                            Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                            Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                            Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
+                        });
+                    }
+                }
 
                 var user = users.Where(x => x.Username == username.ToLower()).FirstOrDefault();
 
@@ -53,155 +50,141 @@ namespace DesafioStone.Repositories
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IUser CreateUser(UserCreateRequest request)
+        public static async Task<IUser> CreateUserAsync(UserCreateRequest request)
         {
             IHashProvider hashProvider = new HashProvider();
 
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
+                using var conn = new MySqlConnection(DBAccess.ConnectionString());
                 conn.Open();
 
-                var cmd = new MySqlCommand("INSERT INTO user (username, password, role) VALUES (@username, @password, @role)", conn);
-
+                using var cmd = new MySqlCommand("INSERT INTO user (username, password, role) VALUES (@username, @password, @role)", conn);
                 cmd.Parameters.AddWithValue("username", request.Username);
                 cmd.Parameters.AddWithValue("password", hashProvider.ComputeHash(request.Password));
                 cmd.Parameters.AddWithValue("role", (int)request.Role);
 
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
 
-                return GetUserById(cmd.LastInsertedId);
+                return await GetUserByIdAsync(cmd.LastInsertedId);
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IUser GetUserByUsername(string username)
+        public static async Task<IUser> GetUserByUsernameAsync(string username)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                IUser user;
 
-                var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE isactive = @isActive AND username = @username", conn);
-
-                cmd.Parameters.AddWithValue("isActive", 1);
-                cmd.Parameters.AddWithValue("username", username);
-
-                var rdr = cmd.ExecuteReader();
-                rdr.Read();
-
-                var user = new User
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                    Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
-                    Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                    Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
-                };
+                    conn.Open();
 
-                rdr.Close();
+                    using var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE isactive = @isActive AND username = @username", conn);
+                    cmd.Parameters.AddWithValue("isActive", 1);
+                    cmd.Parameters.AddWithValue("username", username);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    await rdr.ReadAsync();
+
+                    user = new User
+                    {
+                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                        Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                        Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                        Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
+                    };
+                }
 
                 return user;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IUser GetUserById(long userId)
+        public static async Task<IUser> GetUserByIdAsync(long userId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                IUser user;
 
-                var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE id = @userId", conn);
-
-                cmd.Parameters.AddWithValue("userId", userId);
-
-                var rdr = cmd.ExecuteReader();
-                rdr.Read();
-
-                var user = new User
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                    Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
-                    Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                    Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
-                };
+                    conn.Open();
 
-                rdr.Close();
+                    using var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE id = @userId", conn);
+                    cmd.Parameters.AddWithValue("userId", userId);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    await rdr.ReadAsync();
+
+                    user = new User
+                    {
+                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                        Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
+                        Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
+                        Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
+                    };
+                }
 
                 return user;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static void DeleteUser(long userId)
+        public static async Task DeleteUserAsync(long userId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
+                using var conn = new MySqlConnection(DBAccess.ConnectionString());
                 conn.Open();
 
-                var cmd = new MySqlCommand("UPDATE user SET isActive = @isActive WHERE id = @userId", conn);
-
+                using var cmd = new MySqlCommand("UPDATE user SET isActive = @isActive WHERE id = @userId", conn);
                 cmd.Parameters.AddWithValue("isActive", 0);
                 cmd.Parameters.AddWithValue("userId", userId);
 
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception)
             {
-                conn.Close();
+                
             }
         }
 
-        public static IUser UpdateUserPassword(UserUpdatePasswordRequest request, long userId)
+        public static async Task<IUser> UpdateUserPasswordAsync(UserUpdatePasswordRequest request, long userId)
         {
             IHashProvider hashProvider = new HashProvider();
 
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
+                {
+                    conn.Open();
 
-                var cmd = new MySqlCommand("UPDATE user SET password = @password WHERE id = @userId", conn);
+                    using var cmd = new MySqlCommand("UPDATE user SET password = @password WHERE id = @userId", conn);
+                    cmd.Parameters.AddWithValue("password", hashProvider.ComputeHash(request.Password));
+                    cmd.Parameters.AddWithValue("userId", userId);
 
-                cmd.Parameters.AddWithValue("password", hashProvider.ComputeHash(request.Password));
-                cmd.Parameters.AddWithValue("userId", userId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
 
-                cmd.ExecuteNonQuery();
-
-                return GetUserById(userId);
+                return await GetUserByIdAsync(userId);
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }

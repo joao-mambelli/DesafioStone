@@ -9,16 +9,14 @@ namespace DesafioStone.Repositories
 {
     public static class InvoiceRepository
     {
-        public static IInvoice CreateInvoice(InvoiceCreateRequest request)
+        public static async Task<IInvoice> CreateInvoiceAsync(InvoiceCreateRequest request)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
+                using var conn = new MySqlConnection(DBAccess.ConnectionString());
                 conn.Open();
 
-                var cmd = new MySqlCommand("INSERT INTO invoice (month, year, document, description, amount, createdat) VALUES (@month, @year, @document, @description, @amount, @createdAt)", conn);
-
+                using var cmd = new MySqlCommand("INSERT INTO invoice (month, year, document, description, amount, createdat) VALUES (@month, @year, @document, @description, @amount, @createdAt)", conn);
                 cmd.Parameters.AddWithValue("month", (int)request.ReferenceMonth);
                 cmd.Parameters.AddWithValue("year", request.ReferenceYear);
                 cmd.Parameters.AddWithValue("document", request.Document);
@@ -26,258 +24,231 @@ namespace DesafioStone.Repositories
                 cmd.Parameters.AddWithValue("amount", request.Amount);
                 cmd.Parameters.AddWithValue("createdAt", DateTime.UtcNow);
 
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
 
-                return GetInvoiceById(cmd.LastInsertedId);
+                return await GetInvoiceByIdAsync(cmd.LastInsertedId);
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IInvoice GetInvoiceById(long invoiceId)
+        public static async Task<IInvoice> GetInvoiceByIdAsync(long invoiceId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                IInvoice invoice;
 
-                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE id = @invoiceId", conn);
-
-                cmd.Parameters.AddWithValue("invoiceId", invoiceId);
-
-                var rdr = cmd.ExecuteReader();
-                rdr.Read();
-
-                var invoice = new Invoice
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                    ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
-                    ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
-                    Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
-                    Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
-                    Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
-                    IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
-                    CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
-                    DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
-                };
+                    conn.Open();
 
-                rdr.Close();
+                    using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE id = @invoiceId", conn);
+                    cmd.Parameters.AddWithValue("invoiceId", invoiceId);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    await rdr.ReadAsync();
+
+                    invoice = new Invoice
+                    {
+                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                        ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
+                        ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
+                        Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
+                        Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
+                        Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
+                        IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
+                        CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
+                        DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
+                    };
+                }
 
                 return invoice;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IEnumerable<IInvoice> GetAllActiveInvoices()
+        public static async Task<IEnumerable<IInvoice>> GetAllActiveInvoicesAsync()
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                IList<IInvoice> invoices = new List<IInvoice>();
 
-                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive", conn);
-
-                cmd.Parameters.AddWithValue("isActive", 1);
-
-                var rdr = cmd.ExecuteReader();
-
-                var invoices = new List<IInvoice>();
-
-                while(rdr.Read())
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    var invoice = new Invoice
+                    conn.Open();
+
+                    using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive", conn);
+                    cmd.Parameters.AddWithValue("isActive", 1);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    while (await rdr.ReadAsync())
                     {
-                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                        ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
-                        ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
-                        Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
-                        Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
-                        Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
-                        IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
-                        CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
-                        DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
-                    };
-
-                    invoices.Add(invoice);
+                        invoices.Add(new Invoice
+                        {
+                            Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                            ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
+                            ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
+                            Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
+                            Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
+                            Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
+                            IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
+                            CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
+                            DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
+                        });
+                    }
                 }
-
-                rdr.Close();
 
                 return invoices;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IEnumerable<IInvoice> GetActivePaginatedInvoices(InvoicePaginationQuery query)
+        public static async Task<IEnumerable<IInvoice>> GetActivePaginatedInvoicesAsync(InvoicePaginationQuery query)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                IList<IInvoice> invoices = new List<IInvoice>();
 
-                var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive LIMIT @offset, @rows", conn);
-
-                cmd.Parameters.AddWithValue("offset", (query.Page - 1) * query.RowsPerPage);
-                cmd.Parameters.AddWithValue("rows", query.RowsPerPage);
-                cmd.Parameters.AddWithValue("isactive", 1);
-
-                var rdr = cmd.ExecuteReader();
-
-                var invoices = new List<IInvoice>();
-
-                while (rdr.Read())
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
                 {
-                    var invoice = new Invoice
+                    conn.Open();
+
+                    using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive LIMIT @offset, @rows", conn);
+                    cmd.Parameters.AddWithValue("offset", (query.Page - 1) * query.RowsPerPage);
+                    cmd.Parameters.AddWithValue("rows", query.RowsPerPage);
+                    cmd.Parameters.AddWithValue("isactive", 1);
+
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    while (await rdr.ReadAsync())
                     {
-                        Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                        ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
-                        ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
-                        Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
-                        Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
-                        Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
-                        IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
-                        CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
-                        DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
-                    };
-
-                    invoices.Add(invoice);
+                        invoices.Add(new Invoice
+                        {
+                            Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
+                            ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
+                            ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
+                            Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
+                            Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
+                            Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
+                            IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
+                            CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
+                            DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
+                        });
+                    }
                 }
-
-                rdr.Close();
 
                 return invoices;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static long? GetNumberOfActiveInvoices()
+        public static async Task<long?> GetNumberOfActiveInvoicesAsync()
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                long count;
 
-                var cmd = new MySqlCommand("SELECT COUNT(*) FROM invoice WHERE isactive = @isactive", conn);
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
+                {
+                    conn.Open();
 
-                cmd.Parameters.AddWithValue("isactive", 1);
+                    using var cmd = new MySqlCommand("SELECT COUNT(*) FROM invoice WHERE isactive = @isactive", conn);
+                    cmd.Parameters.AddWithValue("isactive", 1);
 
-                var rdr = cmd.ExecuteReader();
+                    using var rdr = await cmd.ExecuteReaderAsync();
+                    await rdr.ReadAsync();
 
-                rdr.Read();
-
-                var count = Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]);
-
-                rdr.Close();
+                    count = Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]);
+                }
 
                 return count;
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static void DeleteInvoice(long invoiceId)
+        public static async Task DeleteInvoiceAsync(long invoiceId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
+                using var conn = new MySqlConnection(DBAccess.ConnectionString());
                 conn.Open();
 
-                var cmd = new MySqlCommand("UPDATE invoice SET isActive = @isActive, deactivatedat = @deactivatedAt WHERE id = @invoiceId", conn);
-
+                using var cmd = new MySqlCommand("UPDATE invoice SET isActive = @isActive, deactivatedat = @deactivatedAt WHERE id = @invoiceId", conn);
                 cmd.Parameters.AddWithValue("isActive", 0);
                 cmd.Parameters.AddWithValue("deactivatedat", DateTime.UtcNow);
                 cmd.Parameters.AddWithValue("invoiceId", invoiceId);
 
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception)
             {
-                conn.Close();
+                
             }
         }
 
-        public static IInvoice UpdateInvoice(InvoiceUpdateRequest request, long invoiceId)
+        public static async Task<IInvoice> UpdateInvoiceAsync(InvoiceUpdateRequest request, long invoiceId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
+                {
+                    conn.Open();
 
-                var cmd = new MySqlCommand("UPDATE invoice SET month = @month, year = @year, document = @document, description = @description, amount = @amount WHERE id = @invoiceId", conn);
+                    using var cmd = new MySqlCommand("UPDATE invoice SET month = @month, year = @year, document = @document, description = @description, amount = @amount WHERE id = @invoiceId", conn);
+                    cmd.Parameters.AddWithValue("month", request.ReferenceMonth);
+                    cmd.Parameters.AddWithValue("year", request.ReferenceYear);
+                    cmd.Parameters.AddWithValue("document", request.Document);
+                    cmd.Parameters.AddWithValue("description", request.Description);
+                    cmd.Parameters.AddWithValue("amount", request.Amount);
+                    cmd.Parameters.AddWithValue("invoiceId", invoiceId);
 
-                cmd.Parameters.AddWithValue("month", request.ReferenceMonth);
-                cmd.Parameters.AddWithValue("year", request.ReferenceYear);
-                cmd.Parameters.AddWithValue("document", request.Document);
-                cmd.Parameters.AddWithValue("description", request.Description);
-                cmd.Parameters.AddWithValue("amount", request.Amount);
-                cmd.Parameters.AddWithValue("invoiceId", invoiceId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
 
-                cmd.ExecuteNonQuery();
-
-                return GetInvoiceById(invoiceId);
+                return await GetInvoiceByIdAsync(invoiceId);
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }
 
-        public static IInvoice PatchInvoice(InvoicePatchRequest request, long invoiceId)
+        public static async Task<IInvoice> PatchInvoiceAsync(InvoicePatchRequest request, long invoiceId)
         {
-            var conn = new MySqlConnection(DBAccess.ConnectionString());
-
             try
             {
-                conn.Open();
+                using (var conn = new MySqlConnection(DBAccess.ConnectionString()))
+                {
+                    conn.Open();
 
-                var cmd = new MySqlCommand("UPDATE invoice SET month = @month, year = @year, document = @document, description = @description, amount = @amount WHERE id = @invoiceId", conn);
+                    using var cmd = new MySqlCommand("UPDATE invoice SET month = @month, year = @year, document = @document, description = @description, amount = @amount WHERE id = @invoiceId", conn);
+                    cmd.Parameters.AddWithValue("month", request.ReferenceMonth);
+                    cmd.Parameters.AddWithValue("year", request.ReferenceYear);
+                    cmd.Parameters.AddWithValue("document", request.Document);
+                    cmd.Parameters.AddWithValue("description", request.Description);
+                    cmd.Parameters.AddWithValue("amount", request.Amount);
+                    cmd.Parameters.AddWithValue("invoiceId", invoiceId);
 
-                cmd.Parameters.AddWithValue("month", request.ReferenceMonth);
-                cmd.Parameters.AddWithValue("year", request.ReferenceYear);
-                cmd.Parameters.AddWithValue("document", request.Document);
-                cmd.Parameters.AddWithValue("description", request.Description);
-                cmd.Parameters.AddWithValue("amount", request.Amount);
-                cmd.Parameters.AddWithValue("invoiceId", invoiceId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
 
-                cmd.ExecuteNonQuery();
-
-                return GetInvoiceById(invoiceId);
+                return await GetInvoiceByIdAsync(invoiceId);
             }
             catch (Exception)
             {
-                conn.Close();
-
                 return null;
             }
         }

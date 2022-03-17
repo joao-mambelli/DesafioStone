@@ -14,9 +14,9 @@ namespace DesafioStone.Controllers
         [HttpPost]
         [Route("authorize")]
         [SwaggerOperation(Summary = "In case Username and Passwords are right, retrieves a new 8 hours token.")]
-        public IActionResult AuthorizeUser([FromBody] UserAuthorizeRequest request)
+        public async Task<IActionResult> AuthorizeUserAsync([FromBody] UserAuthorizeRequest request)
         {
-            var user = UserRepository.VerifyPassword(request.Username, request.Password);
+            var user = await UserRepository.VerifyPasswordAsync(request.Username, request.Password);
 
             if (user == null)
                 return NotFound(new { message = "Usuário ou senha inválidos" });
@@ -33,19 +33,19 @@ namespace DesafioStone.Controllers
         [HttpPost]
         [Authorize(Roles = "Manager")]
         [SwaggerOperation(Summary = "In case no user with same Username exists, creates a new User.")]
-        public IActionResult CreateUser([FromBody] UserCreateRequest request)
+        public async Task<IActionResult> CreateUserAsync([FromBody] UserCreateRequest request)
         {
             if (request == null)
             {
                 return BadRequest();
             }
 
-            var user = UserRepository.GetUserByUsername(request.Username);
+            var user = await UserRepository.GetUserByUsernameAsync(request.Username);
 
             if (user != null)
                 return Conflict(new { message = "Usuário '" + request.Username +  "' já existe." });
 
-            user = UserRepository.CreateUser(request);
+            user = await UserRepository.CreateUserAsync(request);
 
             return Created("v1/users/" + user.Id, user);
         }
@@ -54,9 +54,9 @@ namespace DesafioStone.Controllers
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
         [SwaggerOperation(Summary = "In case an user with given Id exists, retrieves it.")]
-        public IActionResult GetUserById(long userId)
+        public async Task<IActionResult> GetUserByIdAsync(long userId)
         {
-            var user = UserRepository.GetUserById(userId);
+            var user = await UserRepository.GetUserByIdAsync(userId);
 
             if (user == null)
                 return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
@@ -68,14 +68,14 @@ namespace DesafioStone.Controllers
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
         [SwaggerOperation(Summary = "In case an user with given Id exists, marks it as deleted.")]
-        public IActionResult DeleteUser(long userId)
+        public async Task<IActionResult> DeleteUserAsync(long userId)
         {
-            var user = UserRepository.GetUserById(userId);
+            var user = await UserRepository.GetUserByIdAsync(userId);
 
             if (user == null)
                 return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
 
-            UserRepository.DeleteUser(userId);
+            await UserRepository.DeleteUserAsync(userId);
 
             return Ok(new { message = "Usuário com o id '" + userId + "' foi excluído." });
         }
@@ -84,14 +84,14 @@ namespace DesafioStone.Controllers
         [Route("{userId}/updatepassword")]
         [Authorize]
         [SwaggerOperation(Summary = "In case an user with given Id exists and it's the same Id as the one stored in the token, changes its password.")]
-        public IActionResult UpdateUserPassword([FromBody] UserUpdatePasswordRequest request, long userId)
+        public async Task<IActionResult> UpdateUserPasswordAsync([FromBody] UserUpdatePasswordRequest request, long userId)
         {
             if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)
             {
                 return Unauthorized(new { message = "Você não possui permissão para alterar a senha do usuário com o id '" + userId + "'." });
             }
 
-            var user = UserRepository.UpdateUserPassword(request, userId);
+            var user = await UserRepository.UpdateUserPasswordAsync(request, userId);
 
             return Ok(user);
         }
