@@ -1,4 +1,5 @@
-﻿using DesafioStone.Utils.Providers.HashProvider;
+﻿using DesafioStone.Interfaces.ProvidersInterfaces;
+using DesafioStone.Providers;
 
 namespace DesafioStone.Utils.Common
 {

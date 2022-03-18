@@ -1,9 +1,9 @@
-﻿using DesafioStone.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using DesafioStone.Utils.Common;
+using DesafioStone.Interfaces.ModelsInterfaces;
 
 namespace DesafioStone.Services
 {
@@ -13,7 +13,7 @@ namespace DesafioStone.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var key = Encoding.ASCII.GetBytes(SecretAccess.Secret());
+            var key = Encoding.ASCII.GetBytes(AccessSecret.Secret());
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Expires = DateTime.UtcNow.AddHours(8),

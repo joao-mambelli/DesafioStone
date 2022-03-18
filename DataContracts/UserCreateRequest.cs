@@ -17,6 +17,6 @@ namespace DesafioStone.DataContracts
         public string Password { get; set; }
 
         [RequiredEnumField]
-        public Role? Role { get; set; }
+        public RoleEnum? Role { get; set; }
     }
 }

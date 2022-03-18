@@ -1,5 +1,6 @@
 ﻿using DesafioStone.DataContracts;
-using DesafioStone.Interfaces;
+using DesafioStone.Interfaces.ModelsInterfaces;
+using System.Net;
 
 namespace DesafioStone.Utils.Common
 {
@@ -22,7 +23,7 @@ namespace DesafioStone.Utils.Common
             }
         }
 
-        public static InvoicePatchRequest PatchRequestInvoice(IInvoice invoice)
+        public static InvoicePatchRequest InvoiceToInvoicePatchRequest(IInvoice invoice)
         {
             return new InvoicePatchRequest()
             {
@@ -32,6 +33,11 @@ namespace DesafioStone.Utils.Common
                 Description = invoice.Description,
                 Amount = invoice.Amount
             };
+        }
+
+        public static HttpRequestException BuildHttpException(HttpStatusCode statusCode, string message)
+        {
+            return new HttpRequestException(message, null, statusCode);
         }
     }
 }

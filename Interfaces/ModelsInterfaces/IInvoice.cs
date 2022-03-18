@@ -1,11 +1,11 @@
 using DesafioStone.Enums;
 
-namespace DesafioStone.Interfaces
+namespace DesafioStone.Interfaces.ModelsInterfaces
 {
     public interface IInvoice
     {
         long Id { get; set; }
-        Month ReferenceMonth { get; set; }
+        MonthEnum ReferenceMonth { get; set; }
         int ReferenceYear { get; set; }
         string Document { get; set; }
         string Description { get; set; }

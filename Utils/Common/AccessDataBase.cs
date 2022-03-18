@@ -1,6 +1,6 @@
 ﻿namespace DesafioStone.Utils.Common
 {
-    public static class DBAccess
+    public static class AccessDataBase
     {
         public static string ConnectionString()
         {
@@ -12,6 +12,11 @@
             if (connString == null)
             {
                 connString = Environment.GetEnvironmentVariable("DesafioStoneConnectionString");
+            }
+
+            if (connString == null)
+            {
+                throw new Exception("Connection string not found.");
             }
 
             return connString;

@@ -7,7 +7,7 @@ namespace DesafioStone.DataContracts
     public class InvoiceUpdateRequest
     {
         [RequiredEnumField]
-        public Month? ReferenceMonth { get; set; }
+        public MonthEnum? ReferenceMonth { get; set; }
 
         [Required]
         [Range(1900, int.MaxValue)]

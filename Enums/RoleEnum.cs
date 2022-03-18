@@ -1,6 +1,6 @@
 ﻿namespace DesafioStone.Enums
 {
-    public enum Role
+    public enum RoleEnum
     {
         User = 0,
         Manager = 1,

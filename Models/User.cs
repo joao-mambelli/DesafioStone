@@ -1,5 +1,5 @@
 using DesafioStone.Enums;
-using DesafioStone.Interfaces;
+using DesafioStone.Interfaces.ModelsInterfaces;
 
 namespace DesafioStone.Models
 {
@@ -8,6 +8,6 @@ namespace DesafioStone.Models
         public long Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public Role Role { get; set; }
+        public RoleEnum Role { get; set; }
     }
 }

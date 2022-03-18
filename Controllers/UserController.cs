@@ -4,6 +4,7 @@ using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Swashbuckle.AspNetCore.Annotations;
+using DesafioStone.Interfaces.ServicesInterfaces;
 
 namespace DesafioStone.Controllers
 {
@@ -11,6 +12,13 @@ namespace DesafioStone.Controllers
     [Route("v1/users")]
     public class UserController : ControllerBase
     {
+        private readonly IUserService _service;
+
+        public UserController()
+        {
+            _service = new UserService(new UserRepository());
+        }
+
         [HttpPost]
         [Route("authorize")]
         [SwaggerOperation(Summary = "In case Username and Passwords are right, retrieves a new 8 hours token.")]
@@ -18,10 +26,7 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var user = await UserRepository.VerifyPasswordAsync(request.Username, request.Password);
-
-                if (user == null)
-                    return NotFound(new { message = "Invalid username or password." });
+                var user = await _service.VerifyPasswordAsync(request.Username, request.Password);
 
                 var token = TokenService.GenerateToken(user);
 
@@ -31,9 +36,13 @@ namespace DesafioStone.Controllers
                     token,
                 });
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -44,18 +53,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var user = await UserRepository.GetUserByUsernameAsync(request.Username);
-
-                if (user != null)
-                    return Conflict(new { message = "Username '" + request.Username +  "' already exists." });
-
-                user = await UserRepository.CreateUserAsync(request);
+                var user = await _service.CreateUserAsync(request);
 
                 return Created("v1/users/" + user.Id, user);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -67,16 +75,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var user = await UserRepository.GetUserByIdAsync(userId);
-
-                if (user == null)
-                    return NotFound(new { message = "User with id '" + userId + "' do not exist." });
+                var user = await _service.GetUserByIdAsync(userId);
 
                 return Ok(user);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -88,18 +97,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var user = await UserRepository.GetUserByIdAsync(userId);
-
-                if (user == null)
-                    return NotFound(new { message = "User with id '" + userId + "' do not exist." });
-
-                await UserRepository.DeleteUserAsync(userId);
+                await _service.DeleteUserAsync(userId);
 
                 return Ok(new { message = "User with id '" + userId + "' was marked as deleted." });
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -116,13 +124,17 @@ namespace DesafioStone.Controllers
                     return Unauthorized(new { message = "You do not have permission to change this user's password." });
                 }
 
-                var user = await UserRepository.UpdateUserPasswordAsync(request, userId);
+                var user = await _service.UpdateUserPasswordAsync(request, userId);
 
                 return Ok(user);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
     }

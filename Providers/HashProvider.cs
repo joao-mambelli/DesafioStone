@@ -1,6 +1,7 @@
-﻿using Scrypt;
+﻿using DesafioStone.Interfaces.ProvidersInterfaces;
+using Scrypt;
 
-namespace DesafioStone.Utils.Providers.HashProvider
+namespace DesafioStone.Providers
 {
     public class HashProvider : IHashProvider
     {

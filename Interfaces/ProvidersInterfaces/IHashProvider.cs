@@ -1,4 +1,4 @@
-﻿namespace DesafioStone.Utils.Providers.HashProvider
+﻿namespace DesafioStone.Interfaces.ProvidersInterfaces
 {
     public interface IHashProvider
     {

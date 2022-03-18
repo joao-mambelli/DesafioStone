@@ -1,6 +1,6 @@
 ﻿namespace DesafioStone.Enums
 {
-    public enum Month
+    public enum MonthEnum
     {
         January = 1,
         February = 2,

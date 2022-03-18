@@ -1,6 +1,6 @@
 ﻿namespace DesafioStone.Utils.Common
 {
-    public static class SecretAccess
+    public static class AccessSecret
     {
         public static string Secret()
         {

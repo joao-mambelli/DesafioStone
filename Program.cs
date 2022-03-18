@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddControllers().AddNewtonsoftJson();
 
-var key = Encoding.ASCII.GetBytes(SecretAccess.Secret());
+var key = Encoding.ASCII.GetBytes(AccessSecret.Secret());
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

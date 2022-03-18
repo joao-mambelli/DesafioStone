@@ -5,8 +5,8 @@ namespace DesafioStone.DataContracts
 {
     public class InvoicePatchRequest
     {
-        [EnumDataType(typeof(Month))]
-        public Month ReferenceMonth { get; set; }
+        [EnumDataType(typeof(MonthEnum))]
+        public MonthEnum ReferenceMonth { get; set; }
 
         [Range(1900, int.MaxValue)]
         public int ReferenceYear { get; set; }

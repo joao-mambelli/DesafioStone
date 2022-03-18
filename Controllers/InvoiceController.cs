@@ -3,10 +3,10 @@ using DesafioStone.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Microsoft.AspNetCore.JsonPatch;
-using DesafioStone.Utils.Common;
 using DesafioStone.Entities;
 using Swashbuckle.AspNetCore.Annotations;
-using Newtonsoft.Json;
+using DesafioStone.Interfaces.ServicesInterfaces;
+using DesafioStone.Services;
 
 namespace DesafioStone.Controllers
 {
@@ -14,6 +14,13 @@ namespace DesafioStone.Controllers
     [Route("v1/invoices")]
     public class InvoiceController : ControllerBase
     {
+        private readonly IInvoiceService _service;
+
+        public InvoiceController()
+        {
+            _service = new InvoiceService(new InvoiceRepository());
+        }
+
         [HttpGet]
         [Authorize]
         [SwaggerOperation(Summary = "Retrieves all Invoices.")]
@@ -21,13 +28,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoices = await InvoiceRepository.GetAllActiveInvoicesAsync();
+                var invoices = await _service.GetAllInvoicesAsync();
 
                 return Ok(invoices);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -39,11 +50,11 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoices = await InvoiceRepository.GetActivePaginatedInvoicesAsync(query);
+                var invoices = await _service.GetPaginatedInvoicesAsync(query);
 
-                var count = await InvoiceRepository.GetNumberOfActiveInvoicesAsync();
+                var count = await _service.GetNumberOfInvoicesAsync();
 
-                var pagination = new PaginationMetadata(count ?? 0, query.Page, query.RowsPerPage, invoices.Count());
+                var pagination = new PaginationMetadata(count, query.Page, query.RowsPerPage, invoices.Count());
 
                 return Ok(new
                 {
@@ -51,9 +62,13 @@ namespace DesafioStone.Controllers
                     invoices,
                 });
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -65,16 +80,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
-
-                if (invoice == null)
-                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
+                var invoice = await _service.GetInvoiceByIdAsync(invoiceId);
 
                 return Ok(invoice);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -85,13 +101,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoice = await InvoiceRepository.CreateInvoiceAsync(request);
+                var invoice = await _service.CreateInvoiceAsync(request);
 
                 return Created("v1/invoices/" + invoice.Id, invoice);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -103,18 +123,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
-
-                if (invoice == null)
-                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
-
-                invoice = await InvoiceRepository.UpdateInvoiceAsync(request, invoiceId);
+                var invoice = await _service.UpdateInvoiceAsync(request, invoiceId);
 
                 return Ok(invoice);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -126,22 +145,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
-
-                if (invoice == null)
-                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
-
-                var invoicePatch = Helpers.PatchRequestInvoice(invoice);
-
-                request.ApplyTo(invoicePatch, ModelState);
-
-                invoice = await InvoiceRepository.PatchInvoiceAsync(invoicePatch, invoiceId);
+                var invoice = await _service.PatchInvoiceAsync(request, invoiceId);
 
                 return Ok(invoice);
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
 
@@ -153,18 +167,17 @@ namespace DesafioStone.Controllers
         {
             try
             {
-                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
-
-                if (invoice == null)
-                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
-
-                await InvoiceRepository.DeleteInvoiceAsync(invoiceId);
+                await _service.DeleteInvoiceAsync(invoiceId);
 
                 return Ok(new { message = "Invoice with id '" + invoiceId + "' was marked as deleted." });
             }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal Server Error.", exeption = ex });
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
             }
         }
     }
