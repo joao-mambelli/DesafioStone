@@ -14,14 +14,26 @@ namespace DesafioStone.Controllers
     [Route("v1/invoices")]
     public class InvoiceController : ControllerBase
     {
+        private readonly CustomResults _customResults = new();
+
         [HttpGet]
         [Authorize]
         [SwaggerOperation(Summary = "Retrieves all Invoices.")]
         public async Task<IActionResult> GetAllInvoicesAsync()
         {
-            var invoices = await InvoiceRepository.GetAllActiveInvoicesAsync();
+            try
+            {
+                var invoices = await InvoiceRepository.GetAllActiveInvoicesAsync();
 
-            return Ok(invoices);
+                if (invoices.Exception != null)
+                    return _customResults.InternalServerError(invoices.Exception);
+
+                return Ok(invoices.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpGet]
@@ -30,18 +42,28 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "Retrieves Invoices from specified page.")]
         public async Task<IActionResult> GetPaginatedInvoicesAsync([FromQuery] InvoicePaginationQuery query)
         {
-            var invoices = await InvoiceRepository.GetActivePaginatedInvoicesAsync(query);
+            try
+            {
+                var invoices = await InvoiceRepository.GetActivePaginatedInvoicesAsync(query);
 
-            var count = await InvoiceRepository.GetNumberOfActiveInvoicesAsync();
+                if (invoices.Exception != null)
+                    return _customResults.InternalServerError(invoices.Exception);
 
-            if (invoices == null || count == null)
-                return NotFound();
+                var count = await InvoiceRepository.GetNumberOfActiveInvoicesAsync();
 
-            var meta = new PaginationMetadata(count ?? 0, query.Page, query.RowsPerPage, invoices.Count());
+                if (count.Exception != null)
+                    return _customResults.InternalServerError(count.Exception);
 
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(meta));
+                var meta = new PaginationMetadata(count.Object ?? 0, query.Page, query.RowsPerPage, invoices.Object.Count());
 
-            return Ok(invoices);
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(meta));
+
+                return Ok(invoices.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpGet]
@@ -50,12 +72,22 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an Invoice with given Id exists, retrieves it.")]
         public async Task<IActionResult> GetInvoiceByIdAsync(long invoiceId)
         {
-            var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            try
+            {
+                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
-            if (invoice == null)
-                return NotFound(new { message = "Nota fiscal com o id '" + invoiceId + "' não existe." });
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
 
-            return Ok(invoice);
+                if (invoice.Object == null)
+                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
+
+                return Ok(invoice.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpPost]
@@ -63,14 +95,19 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "Create an Invoice with a new Id.")]
         public async Task<IActionResult> CreateInvoiceAsync([FromBody] InvoiceCreateRequest request)
         {
-            if (request == null)
+            try
             {
-                return BadRequest();
+                var invoice = await InvoiceRepository.CreateInvoiceAsync(request);
+
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
+
+                return Created("v1/invoices/" + invoice.Object.Id, invoice.Object);
             }
-
-            var invoice = await InvoiceRepository.CreateInvoiceAsync(request);
-
-            return Created("v1/invoices/" + invoice.Id, invoice);
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpPut]
@@ -79,14 +116,27 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an Invoice with given Id exists, update all its fields.")]
         public async Task<IActionResult> UpdateInvoiceAsync([FromBody] InvoiceUpdateRequest request, long invoiceId)
         {
-            var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            try
+            {
+                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
-            if (invoice == null)
-                return NotFound(new { message = "Nota fiscal com o id '" + invoiceId + "' não existe." });
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
 
-            invoice = await InvoiceRepository.UpdateInvoiceAsync(request, invoiceId);
+                if (invoice.Object == null)
+                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
 
-            return Ok(invoice);
+                invoice = await InvoiceRepository.UpdateInvoiceAsync(request, invoiceId);
+
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
+
+                return Ok(invoice.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpPatch]
@@ -95,18 +145,31 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an Invoice with given Id exists, patches one or more fields of it.", Description = "This is using Microsoft.AspNetCore.JsonPatch.JsonPatchDocument way of patching. Basically you need to provide a list of operations in the body. For example, you can replace Amount and Description giving the following body:\n\n\t[\n\n\t\t{\n\n\t\t\t\"op\": \"replace\",\n\n\t\t\t\"path\": \"amount\",\n\n\t\t\t\"value\": 100\n\n\t\t},\n\n\t\t{\n\n\t\t\t\"op\": \"replace\",\n\n\t\t\t\"path\": \"description\",\n\n\t\t\t\"value\": \"Description example\"\n\n\t\t}\n\n\t]\n\nReference: <a href=\"https://docs.microsoft.com/en-us/aspnet/core/web-api/jsonpatch?view=aspnetcore-6.0\">https://docs.microsoft.com/en-us/aspnet/core/web-api/jsonpatch?view=aspnetcore-6.0</a>")]
         public async Task<IActionResult> PatchInvoiceAsync([FromBody] JsonPatchDocument<InvoicePatchRequest> request, long invoiceId)
         {
-            var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            try
+            {
+                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
-            if (invoice == null)
-                return NotFound(new { message = "Nota fiscal com o id '" + invoiceId + "' não existe." });
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
 
-            var invoicePatch = Helpers.PatchRequestInvoice(invoice);
+                if (invoice.Object == null)
+                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
 
-            request.ApplyTo(invoicePatch, ModelState);
+                var invoicePatch = Helpers.PatchRequestInvoice(invoice.Object);
 
-            invoice = await InvoiceRepository.PatchInvoiceAsync(invoicePatch, invoiceId);
+                request.ApplyTo(invoicePatch, ModelState);
 
-            return Ok(invoice);
+                invoice = await InvoiceRepository.PatchInvoiceAsync(invoicePatch, invoiceId);
+
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
+
+                return Ok(invoice.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpDelete]
@@ -115,14 +178,27 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an Invoice with given Id exists, marks it as deleted.")]
         public async Task<IActionResult> DeleteInvoiceAsync(long invoiceId)
         {
-            var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            try
+            {
+                var invoice = await InvoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
-            if (invoice == null)
-                return NotFound(new { message = "Nota fiscal com o id '" + invoiceId + "' não existe." });
+                if (invoice.Exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
 
-            await InvoiceRepository.DeleteInvoiceAsync(invoiceId);
+                if (invoice.Object == null)
+                    return NotFound(new { message = "Invoice with id '" + invoiceId + "' do not exist." });
 
-            return Ok(new { message = "Nota fiscal com o id '" + invoiceId + "' foi excluída." });
+                var exception = await InvoiceRepository.DeleteInvoiceAsync(invoiceId);
+
+                if (exception != null)
+                    return _customResults.InternalServerError(invoice.Exception);
+
+                return Ok(new { message = "Invoice with id '" + invoiceId + "' was marked as deleted." });
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
     }
 }

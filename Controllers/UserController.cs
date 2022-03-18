@@ -4,6 +4,7 @@ using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Swashbuckle.AspNetCore.Annotations;
+using DesafioStone.Utils.Common;
 
 namespace DesafioStone.Controllers
 {
@@ -11,23 +12,35 @@ namespace DesafioStone.Controllers
     [Route("v1/users")]
     public class UserController : ControllerBase
     {
+        private readonly CustomResults _customResults = new();
+
         [HttpPost]
         [Route("authorize")]
         [SwaggerOperation(Summary = "In case Username and Passwords are right, retrieves a new 8 hours token.")]
         public async Task<IActionResult> AuthorizeUserAsync([FromBody] UserAuthorizeRequest request)
         {
-            var user = await UserRepository.VerifyPasswordAsync(request.Username, request.Password);
-
-            if (user == null)
-                return NotFound(new { message = "Usuário ou senha inválidos" });
-
-            var token = TokenService.GenerateToken(user);
-
-            return Ok(new
+            try
             {
-                user,
-                token,
-            });
+                var user = await UserRepository.VerifyPasswordAsync(request.Username, request.Password);
+
+                if (user.Exception != null)
+                    return _customResults.InternalServerError(user.Exception);
+
+                if (user == null)
+                    return NotFound(new { message = "Invalid username or password." });
+
+                var token = TokenService.GenerateToken(user.Object);
+
+                return Ok(new
+                {
+                    user.Object,
+                    token,
+                });
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpPost]
@@ -35,19 +48,24 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case no user with same Username exists, creates a new User.")]
         public async Task<IActionResult> CreateUserAsync([FromBody] UserCreateRequest request)
         {
-            if (request == null)
+            try
             {
-                return BadRequest();
+                var user = await UserRepository.GetUserByUsernameAsync(request.Username);
+
+                if (user.Exception != null)
+                    return _customResults.InternalServerError(user.Exception);
+
+                if (user.Object != null)
+                    return Conflict(new { message = "Username '" + request.Username +  "' already exists." });
+
+                user = await UserRepository.CreateUserAsync(request);
+
+                return Created("v1/users/" + user.Object.Id, user.Object);
             }
-
-            var user = await UserRepository.GetUserByUsernameAsync(request.Username);
-
-            if (user != null)
-                return Conflict(new { message = "Usuário '" + request.Username +  "' já existe." });
-
-            user = await UserRepository.CreateUserAsync(request);
-
-            return Created("v1/users/" + user.Id, user);
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpGet]
@@ -56,12 +74,22 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an user with given Id exists, retrieves it.")]
         public async Task<IActionResult> GetUserByIdAsync(long userId)
         {
-            var user = await UserRepository.GetUserByIdAsync(userId);
+            try
+            {
+                var user = await UserRepository.GetUserByIdAsync(userId);
 
-            if (user == null)
-                return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
+                if (user.Exception != null)
+                    return _customResults.InternalServerError(user.Exception);
 
-            return Ok(user);
+                if (user.Object == null)
+                    return NotFound(new { message = "User with id '" + userId + "' do not exist." });
+
+                return Ok(user.Object);
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpDelete]
@@ -70,14 +98,27 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an user with given Id exists, marks it as deleted.")]
         public async Task<IActionResult> DeleteUserAsync(long userId)
         {
-            var user = await UserRepository.GetUserByIdAsync(userId);
+            try
+            {
+                var user = await UserRepository.GetUserByIdAsync(userId);
 
-            if (user == null)
-                return NotFound(new { message = "Usuário com o id '" + userId + "' não existe." });
+                if (user.Exception != null)
+                    return _customResults.InternalServerError(user.Exception);
 
-            await UserRepository.DeleteUserAsync(userId);
+                if (user.Object == null)
+                    return NotFound(new { message = "User with id '" + userId + "' do not exist." });
 
-            return Ok(new { message = "Usuário com o id '" + userId + "' foi excluído." });
+                var exeption = await UserRepository.DeleteUserAsync(userId);
+
+                if (exeption != null)
+                    return _customResults.InternalServerError(exeption);
+
+                return Ok(new { message = "User with id '" + userId + "' was marked as deleted." });
+            }
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
 
         [HttpPost]
@@ -86,14 +127,24 @@ namespace DesafioStone.Controllers
         [SwaggerOperation(Summary = "In case an user with given Id exists and it's the same Id as the one stored in the token, changes its password.")]
         public async Task<IActionResult> UpdateUserPasswordAsync([FromBody] UserUpdatePasswordRequest request, long userId)
         {
-            if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)
+            try
             {
-                return Unauthorized(new { message = "Você não possui permissão para alterar a senha do usuário com o id '" + userId + "'." });
+                if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)
+                {
+                    return Unauthorized(new { message = "You do not have permission to change this user's password." });
+                }
+
+                var user = await UserRepository.UpdateUserPasswordAsync(request, userId);
+
+                if (user.Exception != null)
+                    return _customResults.InternalServerError(user.Exception);
+
+                return Ok(user.Object);
             }
-
-            var user = await UserRepository.UpdateUserPasswordAsync(request, userId);
-
-            return Ok(user);
+            catch (Exception ex)
+            {
+                return _customResults.InternalServerError(ex);
+            }
         }
     }
 }
