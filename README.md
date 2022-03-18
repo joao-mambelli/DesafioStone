@@ -15,7 +15,7 @@ To set them as System Environment Variable on Windows you can press Windows + R 
 
 ## Access
 ### Live
-Currently the API is ruinning on a Google Cloud Run instance from a Google Container Registry image. Its image was created using Docker targeting Linux.
+Currently, for example purposes, the API is ruinning on a Google Cloud Run instance from a Google Container Registry image. Its image was created using Docker targeting Linux.
 
 You can see its Swagger here: https://desafiostone-nmkn24bkqq-rj.a.run.app/swagger/index.html.
 
