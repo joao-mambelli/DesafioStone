@@ -4,13 +4,12 @@ using DesafioStone.DataContracts;
 using DesafioStone.Enums;
 using DesafioStone.Utils.Common;
 using MySql.Data.MySqlClient;
-using DesafioStone.Entities;
 
 namespace DesafioStone.Repositories
 {
     public static class InvoiceRepository
     {
-        public static async Task<IObjectException<IInvoice>> CreateInvoiceAsync(InvoiceCreateRequest request)
+        public static async Task<IInvoice> CreateInvoiceAsync(InvoiceCreateRequest request)
         {
             try
             {
@@ -29,13 +28,13 @@ namespace DesafioStone.Repositories
 
                 return await GetInvoiceByIdAsync(cmd.LastInsertedId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IInvoice>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IInvoice>> GetInvoiceByIdAsync(long invoiceId)
+        public static async Task<IInvoice> GetInvoiceByIdAsync(long invoiceId)
         {
             try
             {
@@ -49,7 +48,7 @@ namespace DesafioStone.Repositories
                     using var rdr = await cmd.ExecuteReaderAsync();
                     if (await rdr.ReadAsync())
                     {
-                        return new ObjectException<IInvoice>(new Invoice
+                        return new Invoice
                         {
                             Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                             ReferenceMonth = Helpers.ConvertFromDBVal<Month>(rdr["month"]),
@@ -60,19 +59,19 @@ namespace DesafioStone.Repositories
                             IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
                             CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
                             DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
-                        });
+                        };
                     }
                 }
 
-                return new ObjectException<IInvoice>(null, null);
+                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IInvoice>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IEnumerable<IInvoice>>> GetAllActiveInvoicesAsync()
+        public static async Task<IEnumerable<IInvoice>> GetAllActiveInvoicesAsync()
         {
             try
             {
@@ -103,15 +102,15 @@ namespace DesafioStone.Repositories
                     }
                 }
 
-                return new ObjectException<IEnumerable<IInvoice>>(invoices);
+                return invoices;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IEnumerable<IInvoice>>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IEnumerable<IInvoice>>> GetActivePaginatedInvoicesAsync(InvoicePaginationQuery query)
+        public static async Task<IEnumerable<IInvoice>> GetActivePaginatedInvoicesAsync(InvoicePaginationQuery query)
         {
             try
             {
@@ -144,15 +143,15 @@ namespace DesafioStone.Repositories
                     }
                 }
 
-                return new ObjectException<IEnumerable<IInvoice>>(invoices);
+                return invoices;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IEnumerable<IInvoice>>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<long?>> GetNumberOfActiveInvoicesAsync()
+        public static async Task<long?> GetNumberOfActiveInvoicesAsync()
         {
             try
             {
@@ -166,19 +165,19 @@ namespace DesafioStone.Repositories
                     using var rdr = await cmd.ExecuteReaderAsync();
                     if (await rdr.ReadAsync())
                     {
-                        return new ObjectException<long?>(Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]));
+                        return Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]);
                     }
                 }
 
-                return new ObjectException<long?>(null, null);
+                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<long?>(ex);
+                throw;
             }
         }
 
-        public static async Task<Exception> DeleteInvoiceAsync(long invoiceId)
+        public static async Task DeleteInvoiceAsync(long invoiceId)
         {
             try
             {
@@ -191,16 +190,14 @@ namespace DesafioStone.Repositories
                 cmd.Parameters.AddWithValue("invoiceId", invoiceId);
 
                 await cmd.ExecuteNonQueryAsync();
-
-                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return ex;
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IInvoice>> UpdateInvoiceAsync(InvoiceUpdateRequest request, long invoiceId)
+        public static async Task<IInvoice> UpdateInvoiceAsync(InvoiceUpdateRequest request, long invoiceId)
         {
             try
             {
@@ -221,13 +218,13 @@ namespace DesafioStone.Repositories
 
                 return await GetInvoiceByIdAsync(invoiceId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IInvoice>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IInvoice>> PatchInvoiceAsync(InvoicePatchRequest request, long invoiceId)
+        public static async Task<IInvoice> PatchInvoiceAsync(InvoicePatchRequest request, long invoiceId)
         {
             try
             {
@@ -248,9 +245,9 @@ namespace DesafioStone.Repositories
 
                 return await GetInvoiceByIdAsync(invoiceId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IInvoice>(ex);
+                throw;
             }
         }
     }

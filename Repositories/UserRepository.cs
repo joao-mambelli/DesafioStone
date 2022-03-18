@@ -5,13 +5,12 @@ using DesafioStone.Enums;
 using DesafioStone.Utils.Providers.HashProvider;
 using DesafioStone.Utils.Common;
 using MySql.Data.MySqlClient;
-using DesafioStone.Entities;
 
 namespace DesafioStone.Repositories
 {
     public static class UserRepository
     {
-        public static async Task<IObjectException<IUser>> VerifyPasswordAsync(string username, string password)
+        public static async Task<IUser> VerifyPasswordAsync(string username, string password)
         {
             try
             {
@@ -44,18 +43,18 @@ namespace DesafioStone.Repositories
                 {
                     user.Password = "";
 
-                    return new ObjectException<IUser>(user);
+                    return user;
                 }
 
-                return new ObjectException<IUser>(null, null);
+                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IUser>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IUser>> CreateUserAsync(UserCreateRequest request)
+        public static async Task<IUser> CreateUserAsync(UserCreateRequest request)
         {
             IHashProvider hashProvider = new HashProvider();
 
@@ -73,13 +72,13 @@ namespace DesafioStone.Repositories
 
                 return await GetUserByIdAsync(cmd.LastInsertedId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IUser>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IUser>> GetUserByUsernameAsync(string username)
+        public static async Task<IUser> GetUserByUsernameAsync(string username)
         {
             try
             {
@@ -94,25 +93,25 @@ namespace DesafioStone.Repositories
                     using var rdr = await cmd.ExecuteReaderAsync();
                     if (await rdr.ReadAsync())
                     {
-                        return new ObjectException<IUser>(new User
+                        return new User
                         {
                             Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                             Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
                             Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
                             Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
-                        });
+                        };
                     }
                 }
 
-                return new ObjectException<IUser>(null, null);
+                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IUser>(ex);
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IUser>> GetUserByIdAsync(long userId)
+        public static async Task<IUser> GetUserByIdAsync(long userId)
         {
             try
             {
@@ -126,25 +125,25 @@ namespace DesafioStone.Repositories
                     using var rdr = await cmd.ExecuteReaderAsync();
                     if (await rdr.ReadAsync())
                     {
-                        return new ObjectException<IUser>(new User
+                        return new User
                         {
                             Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                             Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
                             Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
                             Role = Helpers.ConvertFromDBVal<Role>(rdr["role"])
-                        });
+                        };
                     }
                 }
 
-                return new ObjectException<IUser>(null, null);
+                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IUser>(ex);
+                throw;
             }
         }
 
-        public static async Task<Exception> DeleteUserAsync(long userId)
+        public static async Task DeleteUserAsync(long userId)
         {
             try
             {
@@ -156,16 +155,14 @@ namespace DesafioStone.Repositories
                 cmd.Parameters.AddWithValue("userId", userId);
 
                 await cmd.ExecuteNonQueryAsync();
-
-                return null;
             }
-            catch (Exception ex)
+            catch
             {
-                return ex;
+                throw;
             }
         }
 
-        public static async Task<IObjectException<IUser>> UpdateUserPasswordAsync(UserUpdatePasswordRequest request, long userId)
+        public static async Task<IUser> UpdateUserPasswordAsync(UserUpdatePasswordRequest request, long userId)
         {
             IHashProvider hashProvider = new HashProvider();
 
@@ -184,9 +181,9 @@ namespace DesafioStone.Repositories
 
                 return await GetUserByIdAsync(userId);
             }
-            catch (Exception ex)
+            catch
             {
-                return new ObjectException<IUser>(ex);
+                throw;
             }
         }
     }
