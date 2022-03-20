@@ -1,15 +1,14 @@
-﻿using DesafioStone.Interfaces.RepositoriesInterfaces;
+﻿using DesafioStone.Interfaces.Repositories;
 using DesafioStone.Models;
 using DesafioStone.Enums;
 using DesafioStone.Utils.Common;
 using MySql.Data.MySqlClient;
-using DesafioStone.Interfaces.ModelsInterfaces;
 
 namespace DesafioStone.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        public async Task<IEnumerable<IUser>> GetAllUsersAsync(bool active = true)
+        public async Task<IEnumerable<User>> GetAllUsersAsync(bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -17,7 +16,7 @@ namespace DesafioStone.Repositories
             using var cmd = new MySqlCommand("SELECT id, username, password, role FROM user WHERE isActive = @isActive", conn);
             cmd.Parameters.AddWithValue("isActive", active ? 1 : 0);
 
-            var list = new List<IUser>();
+            var list = new List<User>();
 
             using var rdr = await cmd.ExecuteReaderAsync();
             while (await rdr.ReadAsync())
@@ -34,7 +33,7 @@ namespace DesafioStone.Repositories
             return list;
         }
 
-        public async Task<IUser> GetUserByIdAsync(long userId, bool active = true)
+        public async Task<User> GetUserByIdAsync(long userId, bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -58,7 +57,7 @@ namespace DesafioStone.Repositories
             return null;
         }
 
-        public async Task<IUser> GetUserByUsernameAsync(string username, bool active = true)
+        public async Task<User> GetUserByUsernameAsync(string username, bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -82,7 +81,7 @@ namespace DesafioStone.Repositories
             return null;
         }
 
-        public async Task<long> InsertUserAsync(IUser user)
+        public async Task<long> InsertUserAsync(User user)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -97,7 +96,7 @@ namespace DesafioStone.Repositories
             return cmd.LastInsertedId;
         }
 
-        public async Task UpdateUserAsync(IUser user)
+        public async Task UpdateUserAsync(User user)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();

@@ -1,15 +1,14 @@
 ﻿using DesafioStone.Models;
-using DesafioStone.Interfaces.ModelsInterfaces;
 using DesafioStone.Enums;
 using DesafioStone.Utils.Common;
 using MySql.Data.MySqlClient;
-using DesafioStone.Interfaces.RepositoriesInterfaces;
+using DesafioStone.Interfaces.Repositories;
 
 namespace DesafioStone.Repositories
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-        public async Task<IEnumerable<IInvoice>> GetAllInvoicesAsync(bool active = true)
+        public async Task<IEnumerable<Invoice>> GetAllInvoicesAsync(bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -17,7 +16,7 @@ namespace DesafioStone.Repositories
             using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive", conn);
             cmd.Parameters.AddWithValue("isActive", active ? 1 : 0);
 
-            var invoices = new List<IInvoice>();
+            var invoices = new List<Invoice>();
 
             using var rdr = await cmd.ExecuteReaderAsync();
             while (await rdr.ReadAsync())
@@ -39,7 +38,7 @@ namespace DesafioStone.Repositories
             return invoices;
         }
 
-        public async Task<IEnumerable<IInvoice>> GetInvoicesOffsetAsync(int offset, int amount, bool active = true)
+        public async Task<IEnumerable<Invoice>> GetInvoicesOffsetAsync(int offset, int amount, bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -49,7 +48,7 @@ namespace DesafioStone.Repositories
             cmd.Parameters.AddWithValue("amount", amount);
             cmd.Parameters.AddWithValue("isactive", active ? 1 : 0);
 
-            var invoices = new List<IInvoice>();
+            var invoices = new List<Invoice>();
 
             using var rdr = await cmd.ExecuteReaderAsync();
             while (await rdr.ReadAsync())
@@ -71,7 +70,7 @@ namespace DesafioStone.Repositories
             return invoices;
         }
 
-        public async Task<IInvoice> GetInvoiceByIdAsync(long invoiceId, bool active = true)
+        public async Task<Invoice> GetInvoiceByIdAsync(long invoiceId, bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -114,7 +113,7 @@ namespace DesafioStone.Repositories
             return Helpers.ConvertFromDBVal<long>(rdr["COUNT(*)"]);
         }
 
-        public async Task<long> InsertInvoiceAsync(IInvoice invoice)
+        public async Task<long> InsertInvoiceAsync(Invoice invoice)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
@@ -132,7 +131,7 @@ namespace DesafioStone.Repositories
             return cmd.LastInsertedId;
         }
 
-        public async Task UpdateInvoiceAsync(IInvoice invoice)
+        public async Task UpdateInvoiceAsync(Invoice invoice)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();

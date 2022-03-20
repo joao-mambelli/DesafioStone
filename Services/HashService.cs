@@ -1,9 +1,9 @@
-﻿using DesafioStone.Interfaces.ProvidersInterfaces;
+﻿using DesafioStone.Interfaces.Services;
 using Scrypt;
 
-namespace DesafioStone.Providers
+namespace DesafioStone.Services
 {
-    public class HashProvider : IHashProvider
+    public class HashService : IHashService
     {
         private const int BlockSize = 8;
         private const int IterationCount = 16384;
@@ -11,7 +11,7 @@ namespace DesafioStone.Providers
 
         private readonly ScryptEncoder _encoder;
 
-        public HashProvider()
+        public HashService()
         {
             _encoder = new ScryptEncoder(IterationCount, BlockSize, ThreadCount);
         }

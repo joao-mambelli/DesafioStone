@@ -4,7 +4,8 @@ using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Swashbuckle.AspNetCore.Annotations;
-using DesafioStone.Interfaces.ServicesInterfaces;
+using DesafioStone.Interfaces.Services;
+using DesafioStone.Providers;
 
 namespace DesafioStone.Controllers
 {
@@ -28,7 +29,7 @@ namespace DesafioStone.Controllers
             {
                 var user = await _service.VerifyPasswordAsync(request.Username, request.Password);
 
-                var token = TokenService.GenerateToken(user);
+                var token = new TokenProvider().GenerateToken(user);
 
                 return Ok(new
                 {

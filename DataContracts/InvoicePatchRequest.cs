@@ -1,10 +1,25 @@
 ﻿using DesafioStone.Enums;
 using System.ComponentModel.DataAnnotations;
+using DesafioStone.Models;
 
 namespace DesafioStone.DataContracts
 {
     public class InvoicePatchRequest
     {
+        public InvoicePatchRequest()
+        {
+            
+        }
+
+        public InvoicePatchRequest(Invoice invoice)
+        {
+            ReferenceMonth = invoice.ReferenceMonth;
+            ReferenceYear = invoice.ReferenceYear;
+            Document = invoice.Document;
+            Description = invoice.Description;
+            Amount = invoice.Amount;
+        }
+
         [EnumDataType(typeof(MonthEnum))]
         public MonthEnum ReferenceMonth { get; set; }
 

@@ -1,6 +1,6 @@
-﻿namespace DesafioStone.Interfaces.ProvidersInterfaces
+﻿namespace DesafioStone.Interfaces.Services
 {
-    public interface IHashProvider
+    public interface IHashService
     {
         bool CompareHash(string plainValue, string hashedValue);
         string ComputeHash(string value);

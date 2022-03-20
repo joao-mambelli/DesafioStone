@@ -3,13 +3,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using DesafioStone.Utils.Common;
-using DesafioStone.Interfaces.ModelsInterfaces;
+using DesafioStone.Models;
+using DesafioStone.Interfaces.Providers;
 
-namespace DesafioStone.Services
+namespace DesafioStone.Providers
 {
-    public static class TokenService
+    public class TokenProvider : ITokenProvider
     {
-        public static string GenerateToken(IUser user)
+        public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 

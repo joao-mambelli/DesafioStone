@@ -1,9 +1,8 @@
 using DesafioStone.Enums;
-using DesafioStone.Interfaces.ModelsInterfaces;
 
 namespace DesafioStone.Models
 {
-    public class Invoice : IInvoice
+    public class Invoice
     {
         public long Id { get; set; }
         public MonthEnum ReferenceMonth { get; set; }

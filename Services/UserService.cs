@@ -1,13 +1,10 @@
-﻿using DesafioStone.Interfaces.ModelsInterfaces;
-using DesafioStone.Interfaces.RepositoriesInterfaces;
-using DesafioStone.Interfaces.ServicesInterfaces;
+﻿using DesafioStone.Interfaces.Repositories;
+using DesafioStone.Interfaces.Services;
 using DesafioStone.Models;
 using DesafioStone.DataContracts;
 using DesafioStone.Enums;
 using DesafioStone.Utils.Common;
 using System.Net;
-using DesafioStone.Interfaces.ProvidersInterfaces;
-using DesafioStone.Providers;
 
 namespace DesafioStone.Services
 {
@@ -20,17 +17,17 @@ namespace DesafioStone.Services
             _repository = repository;
         }
 
-        public async Task<IUser> VerifyPasswordAsync(string username, string password)
+        public async Task<User> VerifyPasswordAsync(string username, string password)
         {
             var user = await _repository.GetUserByUsernameAsync(username);
 
-            if (user == null && !Password.IsValid(password, user.Password))
+            if (user == null && !new PasswordService().IsValid(password, user.Password))
                 throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "Invalid username or password.");
 
             return user;
         }
 
-        public async Task<IUser> GetUserByUsernameAsync(string username)
+        public async Task<User> GetUserByUsernameAsync(string username)
         {
             var user = await _repository.GetUserByUsernameAsync(username);
 
@@ -40,7 +37,7 @@ namespace DesafioStone.Services
             return user;
         }
 
-        public async Task<IUser> GetUserByIdAsync(long userId)
+        public async Task<User> GetUserByIdAsync(long userId)
         {
             var user = await _repository.GetUserByIdAsync(userId);
 
@@ -50,9 +47,9 @@ namespace DesafioStone.Services
             return user;
         }
 
-        public async Task<IUser> CreateUserAsync(UserCreateRequest request)
+        public async Task<User> CreateUserAsync(UserCreateRequest request)
         {
-            IHashProvider hashProvider = new HashProvider();
+            IHashService hashProvider = new HashService();
 
             var user = await _repository.GetUserByUsernameAsync(request.Username);
 
@@ -69,9 +66,9 @@ namespace DesafioStone.Services
             return await _repository.GetUserByIdAsync(insertedId);
         }
 
-        public async Task<IUser> UpdateUserPasswordAsync(UserUpdatePasswordRequest request, long userId)
+        public async Task<User> UpdateUserPasswordAsync(UserUpdatePasswordRequest request, long userId)
         {
-            IHashProvider hashProvider = new HashProvider();
+            IHashService hashProvider = new HashService();
 
             var user = await _repository.GetUserByIdAsync(userId);
 

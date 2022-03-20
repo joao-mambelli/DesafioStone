@@ -1,9 +1,8 @@
 using DesafioStone.Enums;
-using DesafioStone.Interfaces.ModelsInterfaces;
 
 namespace DesafioStone.Models
 {
-    public class User : IUser
+    public class User
     {
         public long Id { get; set; }
         public string Username { get; set; }

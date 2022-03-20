@@ -1,6 +1,4 @@
-﻿using DesafioStone.DataContracts;
-using DesafioStone.Interfaces.ModelsInterfaces;
-using System.Net;
+﻿using System.Net;
 
 namespace DesafioStone.Utils.Common
 {
@@ -21,18 +19,6 @@ namespace DesafioStone.Utils.Common
             {
                 return (T)obj;
             }
-        }
-
-        public static InvoicePatchRequest InvoiceToInvoicePatchRequest(IInvoice invoice)
-        {
-            return new InvoicePatchRequest()
-            {
-                ReferenceMonth = invoice.ReferenceMonth,
-                ReferenceYear = invoice.ReferenceYear,
-                Document = invoice.Document,
-                Description = invoice.Description,
-                Amount = invoice.Amount
-            };
         }
 
         public static HttpRequestException BuildHttpException(HttpStatusCode statusCode, string message)

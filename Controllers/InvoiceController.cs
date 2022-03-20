@@ -5,7 +5,7 @@ using DesafioStone.DataContracts;
 using Microsoft.AspNetCore.JsonPatch;
 using DesafioStone.Entities;
 using Swashbuckle.AspNetCore.Annotations;
-using DesafioStone.Interfaces.ServicesInterfaces;
+using DesafioStone.Interfaces.Services;
 using DesafioStone.Services;
 
 namespace DesafioStone.Controllers

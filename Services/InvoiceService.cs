@@ -1,6 +1,5 @@
-﻿using DesafioStone.Interfaces.ModelsInterfaces;
-using DesafioStone.Interfaces.RepositoriesInterfaces;
-using DesafioStone.Interfaces.ServicesInterfaces;
+﻿using DesafioStone.Interfaces.Repositories;
+using DesafioStone.Interfaces.Services;
 using DesafioStone.Models;
 using DesafioStone.DataContracts;
 using DesafioStone.Enums;
@@ -19,19 +18,19 @@ namespace DesafioStone.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<IInvoice>> GetAllInvoicesAsync()
+        public async Task<IEnumerable<Invoice>> GetAllInvoicesAsync()
         {
             var invoices = await _repository.GetAllInvoicesAsync();
 
             return invoices;
         }
 
-        public async Task<IEnumerable<IInvoice>> GetPaginatedInvoicesAsync(InvoicePaginationQuery query)
+        public async Task<IEnumerable<Invoice>> GetPaginatedInvoicesAsync(InvoicePaginationQuery query)
         {
             return await _repository.GetInvoicesOffsetAsync(query.Page - 1, query.RowsPerPage);
         }
 
-        public async Task<IInvoice> GetInvoiceByIdAsync(long invoiceId)
+        public async Task<Invoice> GetInvoiceByIdAsync(long invoiceId)
         {
             var invoice = await _repository.GetInvoiceByIdAsync(invoiceId);
 
@@ -46,7 +45,7 @@ namespace DesafioStone.Services
             return await _repository.GetInvoiceCountAsync();
         }
 
-        public async Task<IInvoice> CreateInvoiceAsync(InvoiceCreateRequest request)
+        public async Task<Invoice> CreateInvoiceAsync(InvoiceCreateRequest request)
         {
             var insertedId = await _repository.InsertInvoiceAsync(new Invoice()
             {
@@ -60,7 +59,7 @@ namespace DesafioStone.Services
             return await _repository.GetInvoiceByIdAsync(insertedId);
         }
 
-        public async Task<IInvoice> UpdateInvoiceAsync(InvoiceUpdateRequest request, long invoiceId)
+        public async Task<Invoice> UpdateInvoiceAsync(InvoiceUpdateRequest request, long invoiceId)
         {
             var invoice = await _repository.GetInvoiceByIdAsync(invoiceId);
 
@@ -78,14 +77,14 @@ namespace DesafioStone.Services
             return invoice;
         }
 
-        public async Task<IInvoice> PatchInvoiceAsync(JsonPatchDocument<InvoicePatchRequest> request, long invoiceId)
+        public async Task<Invoice> PatchInvoiceAsync(JsonPatchDocument<InvoicePatchRequest> request, long invoiceId)
         {
             var invoice = await _repository.GetInvoiceByIdAsync(invoiceId);
 
             if (invoice == null)
                 throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "Invoice not found.");
 
-            var invoicePatch = Helpers.InvoiceToInvoicePatchRequest(invoice);
+            var invoicePatch = new InvoicePatchRequest(invoice);
 
             request.ApplyTo(invoicePatch);
 
