@@ -4,11 +4,16 @@ namespace DesafioStone.Services
 {
     public class PasswordService : IPasswordService
     {
+        private readonly IHashService _hashService;
+
+        public PasswordService(IHashService hashService)
+        {
+            _hashService = hashService;
+        }
+
         public bool IsValid(string passwordRequest, string passwordBase)
         {
-            var hashProvider = new HashService();
-
-            if (hashProvider.CompareHash(passwordRequest, passwordBase))
+            if (_hashService.CompareHash(passwordRequest, passwordBase))
             {
                 return true;
             }

@@ -18,16 +18,9 @@ namespace DesafioStone.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<Invoice>> GetAllInvoicesAsync()
+        public async Task<IEnumerable<Invoice>> GetInvoicesAsync(InvoiceQuery query)
         {
-            var invoices = await _repository.GetAllInvoicesAsync();
-
-            return invoices;
-        }
-
-        public async Task<IEnumerable<Invoice>> GetPaginatedInvoicesAsync(InvoicePaginationQuery query)
-        {
-            return await _repository.GetInvoicesOffsetAsync(query.Page - 1, query.RowsPerPage);
+            return await _repository.GetInvoicesAsync(query);
         }
 
         public async Task<Invoice> GetInvoiceByIdAsync(long invoiceId)

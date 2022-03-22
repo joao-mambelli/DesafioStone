@@ -3,50 +3,64 @@ using DesafioStone.Enums;
 using DesafioStone.Utils.Common;
 using MySql.Data.MySqlClient;
 using DesafioStone.Interfaces.Repositories;
+using DesafioStone.DataContracts;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
 
 namespace DesafioStone.Repositories
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-        public async Task<IEnumerable<Invoice>> GetAllInvoicesAsync(bool active = true)
+        public async Task<IEnumerable<Invoice>> GetInvoicesAsync(InvoiceQuery query, bool active = true)
         {
             using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
             conn.Open();
 
-            using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive", conn);
-            cmd.Parameters.AddWithValue("isActive", active ? 1 : 0);
+            var cmdText = "SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive ";
 
-            var invoices = new List<Invoice>();
+            if (query.Document != null)
+                cmdText += "AND document = @document ";
 
-            using var rdr = await cmd.ExecuteReaderAsync();
-            while (await rdr.ReadAsync())
+            if (query.Year != null)
+                cmdText += "AND year = @year ";
+
+            if (query.Month != null)
+                cmdText += "AND month = @month ";
+
+            if (query.Orders != null)
             {
-                invoices.Add(new Invoice
+                cmdText += "ORDER BY ";
+
+                var list = query.Orders.DistinctBy(e => e.Field);
+                foreach (var order in list)
                 {
-                    Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
-                    ReferenceMonth = Helpers.ConvertFromDBVal<MonthEnum>(rdr["month"]),
-                    ReferenceYear = Helpers.ConvertFromDBVal<int>(rdr["year"]),
-                    Document = Helpers.ConvertFromDBVal<string>(rdr["document"]),
-                    Description = Helpers.ConvertFromDBVal<string>(rdr["description"]),
-                    Amount = Helpers.ConvertFromDBVal<int>(rdr["amount"]),
-                    IsActive = Helpers.ConvertFromDBVal<bool>(rdr["isactive"]),
-                    CreatedAt = Helpers.ConvertFromDBVal<DateTime>(rdr["createdat"]),
-                    DeactivatedAt = Helpers.ConvertFromDBVal<DateTime?>(rdr["deactivatedat"])
-                });
+                    cmdText += JsonConvert.SerializeObject(order.Field, new StringEnumConverter()).Replace("\"", "");
+
+                    if (order.Direction == OrderDirectionEnum.Descending)
+                        cmdText += " DESC";
+
+                    if (order != list.Last())
+                        cmdText += ", ";
+                    else
+                        cmdText += " ";
+                }
             }
 
-            return invoices;
-        }
+            cmdText += "LIMIT @offset, @amount";
 
-        public async Task<IEnumerable<Invoice>> GetInvoicesOffsetAsync(int offset, int amount, bool active = true)
-        {
-            using var conn = new MySqlConnection(AccessDataBase.ConnectionString());
-            conn.Open();
-
-            using var cmd = new MySqlCommand("SELECT id, month, year, document, description, amount, isactive, createdat, deactivatedat FROM invoice WHERE isactive = @isActive LIMIT @offset, @amount", conn);
-            cmd.Parameters.AddWithValue("offset", offset);
-            cmd.Parameters.AddWithValue("amount", amount);
+            using var cmd = new MySqlCommand(cmdText, conn);
+            cmd.Parameters.AddWithValue("offset", (query.Page - 1) * query.RowsPerPage);
+            cmd.Parameters.AddWithValue("amount", query.RowsPerPage);
             cmd.Parameters.AddWithValue("isactive", active ? 1 : 0);
+
+            if (query.Document != null)
+                cmd.Parameters.AddWithValue("document", query.Document);
+
+            if (query.Year != null)
+                cmd.Parameters.AddWithValue("year", query.Year);
+
+            if (query.Month != null)
+                cmd.Parameters.AddWithValue("month", query.Month);
 
             var invoices = new List<Invoice>();
 

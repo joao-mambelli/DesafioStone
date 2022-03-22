@@ -6,8 +6,7 @@ namespace DesafioStone.Interfaces.Services
 {
     public interface IInvoiceService
     {
-        Task<IEnumerable<Invoice>> GetAllInvoicesAsync();
-        Task<IEnumerable<Invoice>> GetPaginatedInvoicesAsync(InvoicePaginationQuery query);
+        Task<IEnumerable<Invoice>> GetInvoicesAsync(InvoiceQuery query);
         Task<Invoice> GetInvoiceByIdAsync(long invoiceId);
         Task<long> GetNumberOfInvoicesAsync();
         Task<Invoice> CreateInvoiceAsync(InvoiceCreateRequest request);

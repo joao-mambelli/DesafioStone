@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using DesafioStone.Repositories;
-using DesafioStone.Services;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Swashbuckle.AspNetCore.Annotations;
 using DesafioStone.Interfaces.Services;
-using DesafioStone.Providers;
+using DesafioStone.Interfaces.Providers;
 
 namespace DesafioStone.Controllers
 {
@@ -14,10 +12,12 @@ namespace DesafioStone.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly ITokenProvider _tokenProvider;
 
-        public UserController()
+        public UserController(IUserService service, ITokenProvider tokenProvider)
         {
-            _service = new UserService(new UserRepository());
+            _service = service;
+            _tokenProvider = tokenProvider;
         }
 
         [HttpPost]
@@ -29,7 +29,7 @@ namespace DesafioStone.Controllers
             {
                 var user = await _service.VerifyPasswordAsync(request.Username, request.Password);
 
-                var token = new TokenProvider().GenerateToken(user);
+                var token = _tokenProvider.GenerateToken(user);
 
                 return Ok(new
                 {

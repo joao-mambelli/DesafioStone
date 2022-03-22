@@ -10,10 +10,15 @@ namespace DesafioStone.Providers
 {
     public class TokenProvider : ITokenProvider
     {
+        private readonly JwtSecurityTokenHandler _tokenHandler;
+
+        public TokenProvider(JwtSecurityTokenHandler tokenHandler)
+        {
+            _tokenHandler = tokenHandler;
+        }
+
         public string GenerateToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
             var key = Encoding.ASCII.GetBytes(AccessSecret.Secret());
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -27,9 +32,9 @@ namespace DesafioStone.Providers
                 })
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var token = _tokenHandler.CreateToken(tokenDescriptor);
 
-            return tokenHandler.WriteToken(token);
+            return _tokenHandler.WriteToken(token);
         }
     }
 }

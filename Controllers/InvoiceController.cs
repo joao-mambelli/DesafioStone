@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using DesafioStone.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Microsoft.AspNetCore.JsonPatch;
 using DesafioStone.Entities;
 using Swashbuckle.AspNetCore.Annotations;
 using DesafioStone.Interfaces.Services;
-using DesafioStone.Services;
 
 namespace DesafioStone.Controllers
 {
@@ -16,41 +14,19 @@ namespace DesafioStone.Controllers
     {
         private readonly IInvoiceService _service;
 
-        public InvoiceController()
+        public InvoiceController(IInvoiceService service)
         {
-            _service = new InvoiceService(new InvoiceRepository());
+            _service = service;
         }
 
         [HttpGet]
         [Authorize]
-        [SwaggerOperation(Summary = "Retrieves all Invoices.")]
-        public async Task<IActionResult> GetAllInvoicesAsync()
+        [SwaggerOperation(Summary = "Retrieves Invoices. You can pass filters as query parameters.")]
+        public async Task<IActionResult> GetInvoicesAsync([FromQuery] InvoiceQuery query)
         {
             try
             {
-                var invoices = await _service.GetAllInvoicesAsync();
-
-                return Ok(invoices);
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message, exeption = ex });
-            }
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("pagination")]
-        [SwaggerOperation(Summary = "Retrieves Invoices from specified page.")]
-        public async Task<IActionResult> GetPaginatedInvoicesAsync([FromQuery] InvoicePaginationQuery query)
-        {
-            try
-            {
-                var invoices = await _service.GetPaginatedInvoicesAsync(query);
+                var invoices = await _service.GetInvoicesAsync(query);
 
                 var count = await _service.GetNumberOfInvoicesAsync();
 

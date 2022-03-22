@@ -15,6 +15,7 @@ namespace DesafioStone.DataContracts
 
         [Required]
         [RegularExpression(@"^[0-9]{11}$|^[0-9]{14}$")]
+        [ValidDocument]
         public string Document { get; set; }
 
         [Required]
