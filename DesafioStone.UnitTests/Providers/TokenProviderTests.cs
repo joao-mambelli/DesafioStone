@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.IdentityModel.Tokens.Jwt;
 using DesafioStone.Providers;
+using DesafioStone.Interfaces.Providers;
 
 namespace DesafioStone.UnitTests.Providers
 {
@@ -18,6 +19,7 @@ namespace DesafioStone.UnitTests.Providers
             using var mock = AutoMock.GetLoose();
             mock.Mock<JwtSecurityTokenHandler>().Setup(x => x.CreateToken(It.IsAny<SecurityTokenDescriptor>())).Returns(new JwtSecurityToken()).Verifiable();
             mock.Mock<JwtSecurityTokenHandler>().Setup(x => x.WriteToken(It.IsAny<SecurityToken>())).Returns("test").Verifiable();
+            mock.Mock<ISecretProvider>().Setup(x => x.Secret()).Returns("secret").Verifiable();
 
             var provider = mock.Create<TokenProvider>();
 

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using DesafioStone.Utils.Common;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using DesafioStone.Interfaces.Services;
@@ -21,7 +20,7 @@ builder.Services.AddControllers();
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-var key = Encoding.ASCII.GetBytes(AccessSecret.Secret());
+var key = Encoding.ASCII.GetBytes(new SecretProvider(new ConfigurationBuilder()).Secret());
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -59,6 +58,9 @@ builder.Services.AddScoped<IHashService, HashService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IDbConnectionFactory, MySqlConnectionFactory>();
+builder.Services.AddScoped<IConnectionStringProvider, ConnectionStringProvider>();
+builder.Services.AddScoped<ISecretProvider, SecretProvider>();
+builder.Services.AddScoped<IConfigurationBuilder, ConfigurationBuilder>();
 builder.Services.AddScoped<JwtSecurityTokenHandler>();
 
 var app = builder.Build();
