@@ -50,7 +50,7 @@ namespace DesafioStone.Controllers
         [HttpGet]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
-        [SwaggerOperation(Summary = "In case an user with given Id exists, retrieves it.")]
+        [SwaggerOperation(Summary = "In case an user with given Id exists, retrieves it.", Description = "Require authorization and at least Manager role.")]
         public IActionResult GetUserById(long userId)
         {
             try
@@ -71,7 +71,7 @@ namespace DesafioStone.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Manager")]
-        [SwaggerOperation(Summary = "In case no user with same Username exists, creates a new User.")]
+        [SwaggerOperation(Summary = "In case no user with same Username exists, creates a new User.", Description = "Require authorization and at least Manager role.")]
         public IActionResult CreateUser([FromBody] UserCreateRequest request)
         {
             try
@@ -93,7 +93,7 @@ namespace DesafioStone.Controllers
         [HttpPost]
         [Route("{userId}/updatepassword")]
         [Authorize]
-        [SwaggerOperation(Summary = "In case an user with given Id exists and it's the same Id as the one stored in the token, changes its password.")]
+        [SwaggerOperation(Summary = "In case an user with given Id exists and it's the same Id as the one stored in the token, changes its password.", Description = "Require authorization.")]
         public IActionResult UpdateUserPassword([FromBody] UserUpdatePasswordRequest request, long userId)
         {
             try
@@ -120,7 +120,7 @@ namespace DesafioStone.Controllers
         [HttpDelete]
         [Route("{userId}")]
         [Authorize(Roles = "Manager")]
-        [SwaggerOperation(Summary = "In case an user with given Id exists, marks it as deleted.")]
+        [SwaggerOperation(Summary = "In case an user with given Id exists, marks it as deleted.", Description = "Require authorization and at least Manager role.")]
         public IActionResult DeleteUser(long userId)
         {
             try
