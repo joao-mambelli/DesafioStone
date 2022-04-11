@@ -51,13 +51,20 @@ namespace DesafioStone.Controllers
 
         [HttpPost]
         [Route("refresh")]
-        [SwaggerOperation(Summary = "Refreshes the user's token if the given token is still valid and the refresh token is right.")]
+        [Authorize]
+        [SwaggerOperation(Summary = "Refreshes the user's token if the given token is still valid and the refresh token is right.", Description = "Require authorization.")]
         public IActionResult RefreshUser([FromBody] UserRefreshRequest request)
         {
             try
             {
                 var principal = _tokenService.GetPrincipalFromValidToken(request.Token);
-                var userId = long.Parse(principal.Claims.First(x => x.Type == "Id").Value);
+                var userId = long.Parse(principal.Claims.FirstOrDefault(i => i.Type == "Id").Value);
+
+                if (long.Parse(User.Claims.FirstOrDefault(i => i.Type == "Id").Value) != userId)
+                {
+                    return Unauthorized(new { message = "You do not have permission to refresh this user's token." });
+                }
+
                 var savedRefreshToken = _tokenService.GetRefreshTokenById(userId);
                 if (savedRefreshToken != request.RefreshToken)
                 {
