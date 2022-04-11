@@ -22,8 +22,8 @@ You can see its Swagger here: https://desafiostone-nmkn24bkqq-rj.a.run.app/swagg
 To make API requests to the api from external sources such as Postman, refer to the Swagger and simply use the https://desafiostone-nmkn24bkqq-rj.a.run.app/{endpoints...}
 
 ### Who can access it?
-The only fully authorized endpoint is the "v1/users/authorize" one, which is used to validate the User and generate the 8-hour token.
+The only fully authorized endpoint is the "v1/users/authorize" one, which is used to validate the User; generating the 2-hour Bearer token and the refresh token.
 
-All the others "users" endpoints are only authorized for Users with a Manager role, except for the "v1/users/{userId}/updatePassword" that is only accessible when the token being used was created by the user with id {userId}, in other words, only the user itself can change its password.
+To refresh the Bearer token and the refresh token you need to added the authorization in the request too besides providing it and the refresh token in the body. Keep in mind that you need to do the refresh before the current token expires.
 
 All the Invoice endpoints are accessible with at least a User role token.
