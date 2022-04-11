@@ -9,7 +9,6 @@ using System.Net;
 using System.Net.Http;
 using DesafioStone.DataContracts;
 using DesafioStone.Models;
-using DesafioStone.Interfaces.Providers;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
@@ -23,7 +22,8 @@ namespace DesafioStone.UnitTests.Controllers
         {
             using var mock = AutoMock.GetLoose();
             mock.Mock<IUserService>().Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(It.IsAny<User>()).Verifiable();
-            mock.Mock<ITokenProvider>().Setup(x => x.GenerateToken(It.IsAny<User>())).Returns(It.IsAny<string>()).Verifiable();
+            mock.Mock<ITokenService>().Setup(x => x.GenerateToken(It.IsAny<User>())).Returns(It.IsAny<string>()).Verifiable();
+            mock.Mock<ITokenService>().Setup(x => x.GenerateAndSaveRefreshToken(It.IsAny<long?>())).Returns(It.IsAny<string>()).Verifiable();
 
             var controller = mock.Create<UserController>();
 

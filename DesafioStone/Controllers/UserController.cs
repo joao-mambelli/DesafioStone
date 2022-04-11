@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using DesafioStone.DataContracts;
 using Swashbuckle.AspNetCore.Annotations;
 using DesafioStone.Interfaces.Services;
-using DesafioStone.Interfaces.Providers;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DesafioStone.Controllers
 {
@@ -12,12 +12,12 @@ namespace DesafioStone.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
-        private readonly ITokenProvider _tokenProvider;
+        private readonly ITokenService _tokenService;
 
-        public UserController(IUserService service, ITokenProvider tokenProvider)
+        public UserController(IUserService service, ITokenService tokenService)
         {
             _service = service;
-            _tokenProvider = tokenProvider;
+            _tokenService = tokenService;
         }
 
         [HttpPost]
@@ -29,12 +29,48 @@ namespace DesafioStone.Controllers
             {
                 var user = _service.VerifyPassword(request.Username, request.Password);
 
-                var token = _tokenProvider.GenerateToken(user);
+                var token = _tokenService.GenerateToken(user);
+                var refreshToken = _tokenService.GenerateAndSaveRefreshToken(user?.Id);
 
                 return Ok(new
                 {
                     user,
                     token,
+                    refreshToken
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode((int)ex.StatusCode, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message, exeption = ex });
+            }
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        [SwaggerOperation(Summary = "Refreshes the user's token if the given token is still valid and the refresh token is right.")]
+        public IActionResult RefreshUser([FromBody] UserRefreshRequest request)
+        {
+            try
+            {
+                var principal = _tokenService.GetPrincipalFromValidToken(request.Token);
+                var userId = long.Parse(principal.Claims.First(x => x.Type == "Id").Value);
+                var savedRefreshToken = _tokenService.GetRefreshTokenById(userId);
+                if (savedRefreshToken != request.RefreshToken)
+                {
+                    throw new SecurityTokenException("Invalid refresh token");
+                }
+
+                var token = _tokenService.GenerateToken(principal.Claims);
+                var refreshToken = _tokenService.GenerateAndSaveRefreshToken(userId);
+
+                return Ok(new
+                {
+                    token,
+                    refreshToken
                 });
             }
             catch (HttpRequestException ex)
