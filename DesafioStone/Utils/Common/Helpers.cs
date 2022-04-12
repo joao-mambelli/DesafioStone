@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace DesafioStone.Utils.Common
 {
@@ -33,6 +34,15 @@ namespace DesafioStone.Utils.Common
             parameter.ParameterName = name;
             parameter.Value = value;
             command.Parameters.Add(parameter);
+        }
+
+        public static string GenerateRandomToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+
+            return Convert.ToBase64String(randomNumber);
         }
     }
 }

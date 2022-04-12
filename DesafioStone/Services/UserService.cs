@@ -91,5 +91,17 @@ namespace DesafioStone.Services
 
             _repository.DeleteUser(userId);
         }
+
+        public void LogoutAllDevices(long userId)
+        {
+            var user = _repository.GetUserById(userId);
+
+            if (user == null)
+                throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "User not found.");
+
+            user.LastLogoutAllRequest = DateTime.UtcNow;
+
+            _repository.UpdateUser(user);
+        }
     }
 }

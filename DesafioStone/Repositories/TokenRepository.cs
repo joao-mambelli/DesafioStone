@@ -14,7 +14,7 @@ namespace DesafioStone.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        public string GetRefreshTokenById(long userId)
+        public string GetRefreshTokenByUserId(long userId)
         {
             var cmdText = "SELECT refreshtoken FROM refreshToken WHERE userid = @userId";
 

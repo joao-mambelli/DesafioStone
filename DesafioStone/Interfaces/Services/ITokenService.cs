@@ -6,12 +6,11 @@ namespace DesafioStone.Interfaces.Services
     public interface ITokenService
     {
         string GenerateToken(User user);
-        string GenerateToken(IEnumerable<Claim> claims);
-        string GenerateRefreshToken();
+        string GenerateToken(IEnumerable<Claim> claims, string secret);
+        ClaimsPrincipal ValidateToken(string token, long userId);
         string GenerateAndSaveRefreshToken(long? userId);
-        ClaimsPrincipal GetPrincipalFromValidToken(string token);
         void InsertRefreshToken(long userId, string refreshToken);
-        string GetRefreshTokenById(long userId);
+        string GetRefreshTokenByUserId(long userId);
         void DeleteRefreshToken(long userId);
     }
 }

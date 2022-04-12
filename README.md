@@ -22,8 +22,12 @@ You can see its Swagger here: https://desafiostone-nmkn24bkqq-rj.a.run.app/swagg
 To make API requests to the api from external sources such as Postman, refer to the Swagger and simply use the https://desafiostone-nmkn24bkqq-rj.a.run.app/{endpoints...}
 
 ### Who can access it?
-The only fully authorized endpoint is the "v1/users/authorize" one, which is used to validate the User; generating the 2-hour Bearer token and the refresh token.
+The only fully authorized endpoint is the "v1/login" one, which is used to validate the User; generating the 2-hour Bearer token and the refresh token.
 
-To refresh the Bearer token and the refresh token you need to added the authorization in the request too besides providing it and the refresh token in the body. Keep in mind that you need to do the refresh before the current token expires.
+To refresh the Bearer token and the refresh token you need to provide the refresh token in the body. Keep in mind that you need to do the refresh before the current token expires, otherwise you will need to login again.
 
-All the Invoice endpoints are accessible with at least a User role token.
+All the Invoice endpoints are accessible with at least an User role token.
+
+The API now has a custom token generation/validation. It will use the Secret, the user's password hash and the "lastLogoutAllRequest" (number of seconds since epoch) to compose the key that will sign the token. This way, if the user changes his/her password, or he/she asks for a "Logout All Devices", all the previous generated tokens will be invalidated. This will require the user to do login after changing the password, tho. Which in my opinion isn't a bad thing.
+
+This approach has a con: It will request the user's information on every request made. This is necessary because we need to get the user's password hash and "lastLogoutAllRequest", which will be used to try to decrypt the token. In my opinion it's worth it because now we have a solid user security.

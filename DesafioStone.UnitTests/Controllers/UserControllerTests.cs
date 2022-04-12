@@ -18,34 +18,6 @@ namespace DesafioStone.UnitTests.Controllers
     public class UserControllerTests
     {
         [TestMethod]
-        public void CanAuthorizeUser_ValidUser_Returns200()
-        {
-            using var mock = AutoMock.GetLoose();
-            mock.Mock<IUserService>().Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(It.IsAny<User>()).Verifiable();
-            mock.Mock<ITokenService>().Setup(x => x.GenerateToken(It.IsAny<User>())).Returns(It.IsAny<string>()).Verifiable();
-            mock.Mock<ITokenService>().Setup(x => x.GenerateAndSaveRefreshToken(It.IsAny<long?>())).Returns(It.IsAny<string>()).Verifiable();
-
-            var controller = mock.Create<UserController>();
-
-            var result = controller.AuthorizeUser(new UserAuthorizeRequest());
-
-            Assert.IsTrue(((ObjectResult)result).StatusCode == 200);
-        }
-
-        [TestMethod]
-        public void CanAuthorizeUser_InalidUser_Returns404()
-        {
-            using var mock = AutoMock.GetLoose();
-            mock.Mock<IUserService>().Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Throws(NotFound()).Verifiable();
-
-            var controller = mock.Create<UserController>();
-
-            var result = controller.AuthorizeUser(new UserAuthorizeRequest());
-
-            Assert.IsTrue(((ObjectResult)result).StatusCode == 404);
-        }
-
-        [TestMethod]
         public void CanGetUserById_UserExists_Returns200()
         {
             using var mock = AutoMock.GetLoose();
@@ -98,7 +70,7 @@ namespace DesafioStone.UnitTests.Controllers
         }
 
         [TestMethod]
-        public void CanUpdateUserPassword_IsSameUserAndUserExists_Returns200()
+        public void CanUpdateUserPassword_UserExists_Returns200()
         {
             using var mock = AutoMock.GetLoose();
             mock.Mock<IUserService>().Setup(x => x.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>(), It.IsAny<long>())).Returns(It.IsAny<User>()).Verifiable();
@@ -106,52 +78,16 @@ namespace DesafioStone.UnitTests.Controllers
             var controller = mock.Create<UserController>();
 
             var id = 0;
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Headers["UserId"] = id.ToString();
             controller.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext()
-                { 
-                    User = new ClaimsPrincipal(
-                        new ClaimsIdentity(
-                            new Claim[]
-                            {
-                                new Claim("Id", id.ToString())
-                            }
-                        )
-                    )
-                }
+                HttpContext = httpContext
             };
 
-            var result = controller.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>(), id);
+            var result = controller.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>());
 
             Assert.IsTrue(((ObjectResult)result).StatusCode == 200);
-        }
-
-        [TestMethod]
-        public void CanUpdateUserPassword_IsNotSameUser_Returns401()
-        {
-            using var mock = AutoMock.GetLoose();
-
-            var controller = mock.Create<UserController>();
-
-            var id = 0;
-            controller.ControllerContext = new ControllerContext()
-            {
-                HttpContext = new DefaultHttpContext()
-                {
-                    User = new ClaimsPrincipal(
-                        new ClaimsIdentity(
-                            new Claim[]
-                            {
-                                new Claim("Id", id.ToString())
-                            }
-                        )
-                    )
-                }
-            };
-
-            var result = controller.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>(), id + 1);
-
-            Assert.IsTrue(((ObjectResult)result).StatusCode == 401);
         }
 
         [TestMethod]
@@ -163,22 +99,14 @@ namespace DesafioStone.UnitTests.Controllers
             var controller = mock.Create<UserController>();
 
             var id = 0;
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Headers["UserId"] = id.ToString();
             controller.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext()
-                {
-                    User = new ClaimsPrincipal(
-                        new ClaimsIdentity(
-                            new Claim[]
-                            {
-                                new Claim("Id", id.ToString())
-                            }
-                        )
-                    )
-                }
+                HttpContext = httpContext
             };
 
-            var result = controller.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>(), id);
+            var result = controller.UpdateUserPassword(It.IsAny<UserUpdatePasswordRequest>());
 
             Assert.IsTrue(((ObjectResult)result).StatusCode == 404);
         }

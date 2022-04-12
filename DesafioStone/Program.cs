@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using DesafioStone.Interfaces.Services;
@@ -12,6 +9,8 @@ using DesafioStone.Interfaces.Providers;
 using DesafioStone.Providers;
 using DesafioStone.Interfaces.Factories;
 using DesafioStone.Factories;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +19,8 @@ builder.Services.AddControllers();
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-var key = Encoding.ASCII.GetBytes(new SecretProvider(new ConfigurationBuilder()).Secret());
+//Using custom token validation
+/*var key = Encoding.UTF8.GetBytes(new SecretProvider(new ConfigurationBuilder()).Secret());
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -37,7 +37,9 @@ builder.Services.AddAuthentication(x =>
         ValidateAudience = false,
         ClockSkew = TimeSpan.Zero
     };
-});
+});*/
+
+builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, AttributeInjectionProvider>());
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -51,19 +53,19 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Dependency Injection
-builder.Services.AddScoped<IInvoiceService, InvoiceService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IHashService, HashService>();
-builder.Services.AddScoped<IPasswordService, PasswordService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-builder.Services.AddScoped<IDbConnectionFactory, MySqlConnectionFactory>();
-builder.Services.AddScoped<IConnectionStringProvider, ConnectionStringProvider>();
-builder.Services.AddScoped<ISecretProvider, SecretProvider>();
-builder.Services.AddScoped<IConfigurationBuilder, ConfigurationBuilder>();
-builder.Services.AddScoped<JwtSecurityTokenHandler>();
+builder.Services.AddTransient<IInvoiceService, InvoiceService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddTransient<IHashService, HashService>();
+builder.Services.AddTransient<IPasswordService, PasswordService>();
+builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.AddTransient<ITokenRepository, TokenRepository>();
+builder.Services.AddTransient<IDbConnectionFactory, MySqlConnectionFactory>();
+builder.Services.AddTransient<IConnectionStringProvider, ConnectionStringProvider>();
+builder.Services.AddTransient<ISecretProvider, SecretProvider>();
+builder.Services.AddTransient<IConfigurationBuilder, ConfigurationBuilder>();
+builder.Services.AddTransient<JwtSecurityTokenHandler>();
 
 var app = builder.Build();
 
@@ -76,7 +78,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
+//app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

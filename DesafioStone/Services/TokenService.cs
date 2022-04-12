@@ -5,7 +5,6 @@ using System.Security.Claims;
 using DesafioStone.Models;
 using DesafioStone.Interfaces.Providers;
 using DesafioStone.Interfaces.Services;
-using System.Security.Cryptography;
 using DesafioStone.Interfaces.Repositories;
 using DesafioStone.Utils.Common;
 using System.Net;
@@ -16,13 +15,15 @@ namespace DesafioStone.Services
     {
         private readonly JwtSecurityTokenHandler _tokenHandler;
         private readonly ISecretProvider _accessSecretProvider;
+        private readonly IUserService _userService;
         private readonly ITokenRepository _repository;
 
-        public TokenService(JwtSecurityTokenHandler tokenHandler, ISecretProvider accessSecretProvider, ITokenRepository repository)
+        public TokenService(JwtSecurityTokenHandler tokenHandler, ISecretProvider accessSecretProvider, ITokenRepository repository, IUserService userService)
         {
             _tokenHandler = tokenHandler;
             _accessSecretProvider = accessSecretProvider;
             _repository = repository;
+            _userService = userService;
         }
 
         public string GenerateToken(User user)
@@ -34,12 +35,20 @@ namespace DesafioStone.Services
                 new Claim("Id", user.Id.ToString())
             };
 
-            return GenerateToken(claims);
+            var logoutAllRequest = "";
+            if (user.LastLogoutAllRequest != null)
+            {
+                logoutAllRequest = (user.LastLogoutAllRequest.Value - new DateTime(1970, 1, 1)).TotalSeconds.ToString();
+            }
+
+            var secret = _accessSecretProvider.Secret() + user.Password + logoutAllRequest;
+
+            return GenerateToken(claims, secret);
         }
 
-        public string GenerateToken(IEnumerable<Claim> claims)
+        public string GenerateToken(IEnumerable<Claim> claims, string secret)
         {
-            var key = Encoding.ASCII.GetBytes(_accessSecretProvider.Secret());
+            var key = Encoding.UTF8.GetBytes(secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Expires = DateTime.UtcNow.AddHours(2),
@@ -52,15 +61,6 @@ namespace DesafioStone.Services
             return _tokenHandler.WriteToken(token);
         }
 
-        public string GenerateRefreshToken()
-        {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-
-            return Convert.ToBase64String(randomNumber);
-        }
-
         public string GenerateAndSaveRefreshToken(long? userId)
         {
             if (userId == null)
@@ -68,35 +68,47 @@ namespace DesafioStone.Services
                 throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "Invalid user id.");
             }
 
-            if (_repository.GetRefreshTokenById(userId.Value) != null)
+            if (_repository.GetRefreshTokenByUserId(userId.Value) != null)
             {
                 DeleteRefreshToken(userId.Value);
             }
 
-            var refreshToken = GenerateRefreshToken();
+            var refreshToken = Helpers.GenerateRandomToken();
 
             InsertRefreshToken(userId.Value, refreshToken);
 
             return refreshToken;
         }
 
-        public ClaimsPrincipal GetPrincipalFromValidToken(string token)
+        public ClaimsPrincipal ValidateToken(string token, long userId)
         {
             if (IsTokenExpired(token))
             {
                 throw new SecurityTokenException("Expired token");
             }
 
+            var user = _userService.GetUserById(userId);
+
+            var logoutAllRequest = "";
+            if (user.LastLogoutAllRequest != null)
+            {
+                logoutAllRequest = (user.LastLogoutAllRequest.Value - new DateTime(1970, 1, 1)).TotalSeconds.ToString();
+            }
+
+            var secret = _accessSecretProvider.Secret() + user.Password + logoutAllRequest;
+
+            var key = Encoding.UTF8.GetBytes(secret);
+
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = false,
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_accessSecretProvider.Secret())),
+                IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateLifetime = false
             };
 
-            var principal = _tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            var principal = _tokenHandler.ValidateToken(token.Split(" ").Last(), tokenValidationParameters, out var securityToken);
             if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new SecurityTokenException("Invalid token");
@@ -110,9 +122,9 @@ namespace DesafioStone.Services
             _repository.InsertRefreshToken(userId, refreshToken);
         }
 
-        public string GetRefreshTokenById(long userId)
+        public string GetRefreshTokenByUserId(long userId)
         {
-            var refreshToken = _repository.GetRefreshTokenById(userId);
+            var refreshToken = _repository.GetRefreshTokenByUserId(userId);
 
             if (refreshToken == null)
                 throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "Refresh token not found.");
@@ -122,7 +134,7 @@ namespace DesafioStone.Services
 
         public void DeleteRefreshToken(long userId)
         {
-            var invoice = _repository.GetRefreshTokenById(userId);
+            var invoice = _repository.GetRefreshTokenByUserId(userId);
 
             if (invoice == null)
                 throw Helpers.BuildHttpException(HttpStatusCode.NotFound, "Refresh token not found.");

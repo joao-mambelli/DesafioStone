@@ -18,7 +18,7 @@ namespace DesafioStone.Repositories
 
         public IEnumerable<User> GetAllUsers(bool active = true)
         {
-            var cmdText = "SELECT id, username, password, role FROM user WHERE isActive = @isActive";
+            var cmdText = "SELECT id, username, password, role, lastlogoutallrequest FROM user WHERE isActive = @isActive";
 
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -50,7 +50,8 @@ namespace DesafioStone.Repositories
                                 Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                                 Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
                                 Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"])
+                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"]),
+                                LastLogoutAllRequest = Helpers.ConvertFromDBVal<DateTime?>(rdr["lastlogoutallrequest"])
                             });
                         }
 
@@ -62,7 +63,7 @@ namespace DesafioStone.Repositories
 
         public User GetUserById(long userId, bool active = true)
         {
-            var cmdText = "SELECT id, username, password, role FROM user WHERE id = @userId AND isActive = @isActive";
+            var cmdText = "SELECT id, username, password, role, lastlogoutallrequest FROM user WHERE id = @userId AND isActive = @isActive";
 
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -93,7 +94,8 @@ namespace DesafioStone.Repositories
                                 Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                                 Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
                                 Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"])
+                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"]),
+                                LastLogoutAllRequest = Helpers.ConvertFromDBVal<DateTime?>(rdr["lastlogoutallrequest"])
                             };
                         }
 
@@ -105,7 +107,7 @@ namespace DesafioStone.Repositories
 
         public User GetUserByUsername(string username, bool active = true)
         {
-            var cmdText = "SELECT id, username, password, role FROM user WHERE username = @username AND isActive = @isActive";
+            var cmdText = "SELECT id, username, password, role, lastlogoutallrequest FROM user WHERE username = @username AND isActive = @isActive";
 
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -136,7 +138,8 @@ namespace DesafioStone.Repositories
                                 Id = Helpers.ConvertFromDBVal<long>(rdr["id"]),
                                 Username = Helpers.ConvertFromDBVal<string>(rdr["username"]),
                                 Password = Helpers.ConvertFromDBVal<string>(rdr["password"]),
-                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"])
+                                Role = Helpers.ConvertFromDBVal<RoleEnum>(rdr["role"]),
+                                LastLogoutAllRequest = Helpers.ConvertFromDBVal<DateTime?>(rdr["lastlogoutallrequest"])
                             };
                         }
 
@@ -179,7 +182,7 @@ namespace DesafioStone.Repositories
 
         public void UpdateUser(User user)
         {
-            var cmdText = "UPDATE user SET username = @username, password, role = @password WHERE id = @userId";
+            var cmdText = "UPDATE user SET username = @username, password = @password, lastlogoutallrequest = @lastlogoutallrequest WHERE id = @userId";
 
             using (var connection = _connectionFactory.CreateConnection())
             {
@@ -192,6 +195,7 @@ namespace DesafioStone.Repositories
                     {
                         command.AddWithValue("username", user.Username);
                         command.AddWithValue("password", user.Password);
+                        command.AddWithValue("lastlogoutallrequest", user.LastLogoutAllRequest);
                         command.AddWithValue("userId", user.Id);
                     }
 

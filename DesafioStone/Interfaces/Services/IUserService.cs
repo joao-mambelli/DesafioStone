@@ -10,6 +10,7 @@ namespace DesafioStone.Interfaces.Services
         User GetUserById(long userId);
         User CreateUser(UserCreateRequest request);
         User UpdateUserPassword(UserUpdatePasswordRequest request, long userId);
+        void LogoutAllDevices(long userId);
         void DeleteUser(long userId);
     }
 }
