@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using DesafioStone.CustomAttributes;
+using DesafioStone.Validations;
 using DesafioStone.Enums;
 
 namespace DesafioStone.DataContracts

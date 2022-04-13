@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using DesafioStone.CustomAttributes;
+using DesafioStone.Validations;
 using DesafioStone.Entities;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -19,7 +19,6 @@ namespace DesafioStone.DataContracts
         [Range(1900, int.MaxValue)]
         public int? Year { get; set; }
 
-        [RegularExpression(@"^[0-9]{11}$|^[0-9]{14}$")]
         [ValidDocument]
         public string Document { get; set; }
 

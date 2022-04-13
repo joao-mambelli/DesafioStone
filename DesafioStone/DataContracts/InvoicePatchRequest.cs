@@ -1,7 +1,7 @@
 ﻿using DesafioStone.Enums;
 using System.ComponentModel.DataAnnotations;
 using DesafioStone.Models;
-using DesafioStone.CustomAttributes;
+using DesafioStone.Validations;
 
 namespace DesafioStone.DataContracts
 {
@@ -29,7 +29,6 @@ namespace DesafioStone.DataContracts
         [Range(1900, int.MaxValue)]
         public int ReferenceYear { get; set; }
 
-        [RegularExpression(@"^[0-9]{11}$|^[0-9]{14}$")]
         [ValidDocument]
         public string Document { get; set; }
 
