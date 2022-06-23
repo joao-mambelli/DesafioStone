@@ -9,17 +9,19 @@ If you want to run the code locally, you need 2 environment variables: Secret an
 
 These can be set in the appsettings.json in the root folder of the main project. Or they can be set as an Environment Variable in your system.
 
-Note that the code will prioritize variables set in the appsettings.json rather than as System Environment Variables. This way you can change them more easily for debugging and testing.
+Note that the code will prioritize variables set in the appsettings.json rather than as System Environment Variables. This way you can change them easily for debugging and testing.
 
 To set them as System Environment Variable on Windows you can press Windows + R and run this: "rundll32 sysdm.cpl,EditEnvironmentVariables". Click on "New..." and add them as DesafioStoneSecret and DesafioStoneConnectionString respectively.
 
 ## Access
 ### Live
-Currently, for example purposes, the API is ruinning on a Google Cloud Run instance from a Google Container Registry image. Its image was created using Docker targeting Linux.
+~~Currently, for example purposes, the API is ruinning on a Google Cloud Run instance from a Google Container Registry image. Its image was created using Docker targeting Linux.~~
 
-You can see its Swagger here: https://desafiostone-nmkn24bkqq-rj.a.run.app/swagger/index.html.
+~~You can see its Swagger here: https://desafiostone-nmkn24bkqq-rj.a.run.app/swagger/index.html.~~
 
-To make API requests to the api from external sources such as Postman, refer to the Swagger and simply use the https://desafiostone-nmkn24bkqq-rj.a.run.app/{endpoints...}
+~~To make API requests to the api from external sources such as Postman, refer to the Swagger and simply use the https://desafiostone-nmkn24bkqq-rj.a.run.app/{endpoints...}~~
+
+My Google Cloud free trial period has ended, so it's not live anymore.
 
 ### Who can access it?
 The only fully authorized endpoint is the "v1/login" one, which is used to validate the User; generating the 2-hour Bearer token and the refresh token.
